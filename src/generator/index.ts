@@ -1,0 +1,191 @@
+import type { Rng } from './rng'
+import { mulberry32, seedFor, pick, pickN, int, shuffle } from './rng'
+import { THEMES, FLAVOR_TEMPLATES, TITLE_TEMPLATES, type Theme } from './themes'
+import { DIRS, placeWords, leftoverCells, finalizeGrid, canPlace, fits, put, type Grid } from './grid'
+import { makeAtoms, buildPayload, type Atoms } from './mechanics'
+import { CRIME_FILLER } from './pools'
+import type { CaseFile, CaseIndexEntry, Mechanic } from './types'
+
+/* Per-volume difficulty + mechanic patterns (indexed by (id-1) % 10).
+ * A=leftovers B=lineup C=elimination D=anagram
+ * Totals across 150: A=65, B=30, C=35, D=20 */
+const PATTERNS: Record<number, string> = {
+  1: 'AABAAAABAA',
+  2: 'ACBACBACAD',
+  3: 'DCBCDABCDC',
+}
+const MECH_MAP: Record<string, Mechanic> = {
+  A: 'leftovers',
+  B: 'lineup',
+  C: 'elimination',
+  D: 'anagram',
+}
+
+const DIRS_BY_VOL: Record<number, string[]> = {
+  1: ['E', 'S', 'SE'],
+  2: ['E', 'S', 'SE', 'W', 'N', 'SW', 'NE'],
+  3: ['E', 'S', 'SE', 'W', 'N', 'SW', 'NE', 'NW'],
+}
+
+const ALL_DIRS = Object.keys(DIRS)
+
+function volumeOf(id: number): 1 | 2 | 3 {
+  return id <= 50 ? 1 : id <= 100 ? 2 : 3
+}
+
+function sizeFor(vol: number, idx: number): number {
+  const base = vol === 1 ? 8 : vol === 2 ? 10 : 12
+  return base + (idx <= 17 ? 0 : idx <= 34 ? 1 : 2)
+}
+
+function wordCount(rng: Rng, vol: number): number {
+  return vol === 1 ? int(rng, 10, 12) : vol === 2 ? int(rng, 12, 15) : int(rng, 15, 18)
+}
+
+/** Leftover budget per mechanic — decoy words consume cells beyond this. */
+const LEFTOVER_TARGET: Record<Mechanic, number> = {
+  leftovers: 64,
+  lineup: 40,
+  elimination: 40,
+  anagram: 44,
+}
+
+/** Greedily hide extra (decoy, non-bank) words until leftovers <= target. */
+function placeDecoys(rng: Rng, grid: Grid, size: number, pool: string[], target: number): void {
+  let misses = 0
+  const decoyDirs = ALL_DIRS
+  while (leftoverCells(grid, size).length > target && misses < 25) {
+    const word = pick(rng, pool)
+    if (word.length < 4 || word.length > size) { misses++; continue }
+    let placed = false
+    for (let t = 0; t < 60 && !placed; t++) {
+      const d = pick(rng, decoyDirs)
+      const { dr, dc } = DIRS[d]
+      const r = Math.floor(rng() * size)
+      const c = Math.floor(rng() * size)
+      if (fits(word.length, r, c, dr, dc, size, size) && canPlace(grid, word, r, c, dr, dc)) {
+        put(grid, word, r, c, dr, dc)
+        placed = true
+      }
+    }
+    if (!placed) misses++
+  }
+}
+
+function fillFlavor(tpl: string, a: Atoms, place: string): string {
+  return tpl
+    .replaceAll('{victim}', a.victim)
+    .replaceAll('{place}', place)
+    .replaceAll('{weapon}', a.weapon.toLowerCase())
+    .replaceAll('{location}', a.location.toLowerCase())
+}
+
+/**
+ * Generate one case. `salt` bumps the seed on title collisions so the whole
+ * 150-case run stays deterministic. Returns null if all attempts fail.
+ */
+export function generateCase(id: number, salt: number, recentThemes: Set<string>): CaseFile | null {
+  const vol = volumeOf(id)
+  const idx = id - (vol - 1) * 50
+  const mechanic = MECH_MAP[PATTERNS[vol][(id - 1) % 10]]
+  const size = sizeFor(vol, idx)
+  const dirs = DIRS_BY_VOL[vol]
+
+  for (let attempt = 0; attempt < 300; attempt++) {
+    const rng = mulberry32(seedFor(id, attempt + salt * 100_003))
+
+    const available = THEMES.filter((t) => !recentThemes.has(t.id))
+    const theme: Theme = pick(rng, available.length ? available : THEMES)
+    const atoms = makeAtoms(rng)
+
+    const wc = wordCount(rng, vol)
+    const themeWords = theme.words.filter((w) => w.length <= size)
+    const words = pickN(rng, themeWords, wc)
+    const filler = shuffle(rng, CRIME_FILLER.filter((w) => w.length <= size))
+    for (const w of filler) {
+      if (words.length >= wc) break
+      if (!words.includes(w)) words.push(w)
+    }
+
+    const placed = placeWords(rng, words, size, size, dirs)
+    if (!placed) continue
+
+    // decoy words (red herrings hidden but not in the bank)
+    const decoyPool = [
+      ...theme.words.filter((w) => !words.includes(w) && w.length <= size),
+      ...CRIME_FILLER.filter((w) => !words.includes(w) && w.length <= size),
+    ]
+    placeDecoys(rng, placed.grid, size, decoyPool, LEFTOVER_TARGET[mechanic])
+
+    const cells = leftoverCells(placed.grid, size)
+    const built = buildPayload(mechanic, rng, cells.length, cells, atoms, words)
+    if (!built || built.fill.length !== cells.length) continue
+
+    const grid = finalizeGrid(placed.grid, size, cells, built.fill)
+
+    const titlePool = [
+      ...theme.titles,
+      ...TITLE_TEMPLATES.map((t) =>
+        t
+          .replaceAll('{victim}', atoms.victim)
+          .replaceAll('{place}', theme.place.replace(/\b\w/g, (ch) => ch.toUpperCase()))
+          .replaceAll('{location}', atoms.location)
+          .replaceAll('{motive}', atoms.motive),
+      ),
+    ]
+
+    return {
+      id,
+      volume: vol,
+      title: pick(rng, titlePool),
+      themeId: theme.id,
+      mechanic,
+      rows: size,
+      cols: size,
+      grid,
+      words,
+      victim: atoms.victim,
+      killer: atoms.killer,
+      weapon: atoms.weapon,
+      location: atoms.location,
+      motive: atoms.motive,
+      flavor: fillFlavor(pick(rng, FLAVOR_TEMPLATES), atoms, theme.place),
+      parSeconds: Math.round(25 + words.length * 6 + size * size * 0.35),
+      placements: placed.placements,
+      payload: built.payload,
+    }
+  }
+  return null
+}
+
+export function generateAll(count = 150): { cases: CaseFile[]; index: CaseIndexEntry[] } {
+  const cases: CaseFile[] = []
+  const usedTitles = new Set<string>()
+  const recentThemes = new Set<string>()
+  const themeQueue: string[] = []
+
+  for (let id = 1; id <= count; id++) {
+    let c: CaseFile | null = null
+    for (let salt = 0; salt < 50 && !c; salt++) {
+      c = generateCase(id, salt, recentThemes)
+      if (c && usedTitles.has(c.title)) c = null
+    }
+    if (!c) throw new Error(`failed to generate case ${id}`)
+
+    usedTitles.add(c.title)
+    themeQueue.push(c.themeId)
+    recentThemes.clear()
+    for (const t of themeQueue.slice(-6)) recentThemes.add(t)
+    cases.push(c)
+  }
+
+  const index = cases.map((c) => ({
+    id: c.id,
+    volume: c.volume,
+    title: c.title,
+    mechanic: c.mechanic,
+    rows: c.rows,
+    wordCount: c.words.length,
+  }))
+  return { cases, index }
+}

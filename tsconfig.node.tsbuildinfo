@@ -1,0 +1,1 @@
+{"root":["./vite.config.ts","./scripts/generate-cases.ts","./scripts/inspect.ts","./scripts/make-icons.ts","./tests/generator.test.ts"],"version":"5.9.3"}
