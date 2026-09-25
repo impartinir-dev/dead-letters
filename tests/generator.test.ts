@@ -7,6 +7,7 @@ import { WORD_SEARCH_MECHANICS } from '../src/generator/types.ts'
 import { DIRS } from '../src/generator/grid.ts'
 import { generateCase } from '../src/generator/index.ts'
 import { TRAIT_VALUES } from '../src/generator/pools.ts'
+import { THEMES } from '../src/generator/themes.ts'
 import {
   countWorlds,
   interrogationConsistent,
@@ -69,7 +70,7 @@ describe('case corpus', () => {
 })
 
 describe('per-case validity', () => {
-  it.each(cases)('case #%i "$title" is well-formed', (c) => {
+  it.each(cases)('case #$id "$title" is well-formed', (c) => {
     const isWS = WORD_SEARCH_MECHANICS.includes(c.mechanic)
     const p = c.payload
 
@@ -217,6 +218,57 @@ describe('per-case validity', () => {
       // clues admit exactly one order — the canonical one
       expect(countOrders(p.clues, p.events.length)).toBe(1)
     }
+  })
+})
+
+describe('story coherence', () => {
+  const themeById = new Map(THEMES.map((t) => [t.id, t]))
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const mentions = (title: string, kw: string) =>
+    new RegExp(`(^|[^A-Za-z])${escape(kw)}($|[^A-Za-z])`, 'i').test(title)
+  /** keywords of other themes found in `title` (ignoring ones the own theme shares) */
+  const foreignRefs = (title: string, themeId: string) => {
+    const own = themeById.get(themeId)!.keywords.map((k) => k.toLowerCase())
+    return THEMES.filter((t) => t.id !== themeId).flatMap((t) =>
+      t.keywords
+        .filter((k) => !own.includes(k.toLowerCase()) && mentions(title, k))
+        .map((k) => `${t.id}:${k}`),
+    )
+  }
+
+  it('every theme has 4–6 plausible rooms and weapons', () => {
+    for (const t of THEMES) {
+      for (const pool of [t.rooms, t.weapons]) {
+        expect(pool.length, t.id).toBeGreaterThanOrEqual(4)
+        expect(pool.length, t.id).toBeLessThanOrEqual(6)
+        for (const x of pool) expect(x, t.id).toMatch(/^[A-Z][a-z]*( [A-Z][a-z]*)*$/)
+        expect(new Set(pool.map(squash)).size, t.id).toBe(pool.length)
+      }
+      expect(t.keywords.length, t.id).toBeGreaterThan(0)
+    }
+  })
+
+  it("no theme's own titles reference another theme", () => {
+    for (const t of THEMES) for (const title of t.titles) expect(foreignRefs(title, t.id), title).toEqual([])
+  })
+
+  it.each(cases)("case #$id location and weapon come from its theme's pools", (c) => {
+    const t = themeById.get(c.themeId)
+    expect(t).toBeDefined()
+    expect(t!.rooms).toContain(c.location)
+    expect(t!.weapons).toContain(c.weapon)
+    const p = c.payload
+    if (p.kind === 'deduction') {
+      for (const w of p.weapons) expect(t!.weapons).toContain(w)
+      for (const l of p.locations) expect(t!.rooms).toContain(l)
+    } else if (p.kind === 'elimination') {
+      for (const w of p.weapons) expect(t!.weapons).toContain(w.name)
+      for (const l of p.locations) expect(t!.rooms).toContain(l.name)
+    }
+  })
+
+  it.each(cases)('case #$id "$title" does not reference another theme', (c) => {
+    expect(foreignRefs(c.title, c.themeId)).toEqual([])
   })
 })
 
