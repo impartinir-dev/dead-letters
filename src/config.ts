@@ -7,6 +7,12 @@
 export const LAUNCH_DATE = '2026-10-01'
 
 /**
+ * Public link to the Tally contact form (Impressum "second contact channel").
+ * Leave empty until the form exists — the Impressum then shows a placeholder.
+ */
+export const CONTACT_FORM_URL = ''
+
+/**
  * Advertising. `enabled` is the single master switch: while it is false, no
  * ad slot, consent banner or ad script is rendered or loaded anywhere.
  * Even when true, ads only appear after the player grants consent

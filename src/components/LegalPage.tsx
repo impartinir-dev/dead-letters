@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { CONTACT_FORM_URL } from '../config'
 
 /** Highlighted placeholder the site owner must still replace. */
 const Todo = ({ children }: { children: ReactNode }) => <mark className="todo">[{children}]</mark>
@@ -39,7 +40,14 @@ export function Impressum({ nav }: { nav: (h: string) => void }) {
       <p>
         E-Mail: <Email />
         <br />
-        Kontaktformular: <Todo>Link zum Kontaktformular</Todo>
+        Kontaktformular:{' '}
+        {CONTACT_FORM_URL ? (
+          <a href={CONTACT_FORM_URL} rel="noopener noreferrer" target="_blank">
+            Nachricht senden
+          </a>
+        ) : (
+          <Todo>Link zum Kontaktformular — CONTACT_FORM_URL in src/config.ts setzen</Todo>
+        )}
       </p>
 
       <h3>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
@@ -92,7 +100,8 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
       <h3>2. Überblick</h3>
       <p>
         DEAD LETTERS läuft vollständig in Ihrem Browser. Es gibt kein Benutzerkonto und keinen eigenen
-        Server; Ihr Spielstand bleibt auf Ihrem Gerät. Welche Daten beim Hosting und bei Werbung
+        Server; Ihr Spielstand bleibt auf Ihrem Gerät. DEAD LETTERS zeigt keine Werbung und verwendet
+        keine Analyse- oder Tracking-Dienste. Welche Daten beim Hosting und bei Kontaktanfragen
         verarbeitet werden, erläutern die folgenden Abschnitte.
       </p>
 
@@ -132,16 +141,30 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         Zwischenablage übergeben. Ich erhalte dabei keine Daten.
       </p>
 
-      <h3>6. Werbung und Einwilligung</h3>
+      <h3>6. Kontaktformular</h3>
       <p>
-        <Todo>
-          Abschnitt folgt, sobald Werbenetzwerk und Consent-Management-Plattform feststehen: Anbieter,
-          Zwecke, Rechtsgrundlage (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG), Speicherdauer,
-          Drittlandübermittlung und Widerruf der Einwilligung
-        </Todo>
+        Für Anfragen nutze ich ein Formular des Anbieters Tally BV, Sint-Pietersnieuwstraat 11, 9000
+        Gent, Belgien. Das Formular öffnet sich auf einer Seite von Tally; erst dann verarbeitet Tally
+        die von Ihnen eingegebenen Angaben (z. B. Name, E-Mail-Adresse und Nachricht) sowie technisch
+        notwendige Verbindungsdaten in meinem Auftrag auf Servern in der Europäischen Union. Mit Tally
+        besteht ein Vertrag zur Auftragsverarbeitung (Art. 28 DSGVO).
+      </p>
+      <p>
+        Ich verwende Ihre Angaben ausschließlich, um Ihre Anfrage zu bearbeiten. Rechtsgrundlage ist
+        mein berechtigtes Interesse an der Beantwortung von Anfragen (Art. 6 Abs. 1 lit. f DSGVO).
+        Ich lösche die Daten, sobald die Anfrage erledigt ist und keine gesetzlichen
+        Aufbewahrungspflichten entgegenstehen. Alternativ können Sie mir jederzeit eine E-Mail
+        schreiben.
       </p>
 
-      <h3>7. Ihre Rechte</h3>
+      <h3>7. Werbung und Analyse</h3>
+      <p>
+        DEAD LETTERS zeigt derzeit keine Werbung an und setzt keine Cookies oder vergleichbaren
+        Technologien zu Werbe- oder Analysezwecken ein. Sollte sich das ändern, wird diese
+        Datenschutzerklärung vorher angepasst und Ihre Einwilligung eingeholt, wo sie erforderlich ist.
+      </p>
+
+      <h3>8. Ihre Rechte</h3>
       <p>
         Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17),
         Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen
@@ -159,7 +182,7 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         .
       </p>
 
-      <h3>8. Stand</h3>
+      <h3>9. Stand</h3>
       <p>25. September 2026</p>
     </Shell>
   )
