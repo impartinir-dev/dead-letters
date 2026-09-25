@@ -10,7 +10,7 @@ ALLOWED_ORIGINS = "https://impartinir-dev.github.io,http://localhost:5173,http:/
 [[d1_databases]]
 binding = "DB"
 database_name = "dead-letters-stats"
-database_id = "REPLACE_WITH_THE_ID_FROM_wrangler_d1_create"
+database_id = "1fa5cedd-9f75-4ec9-87d6-cc602c6f1ab5"
 
 # At most 30 submissions per minute per IP (mobile carriers share IPs; checked
 # in memory, never stored). Each player submits once per daily case.
