@@ -1538,14 +1538,6 @@ body {
 
 /* -------------------------------- legal -------------------------------- */
 
-.legal-note {
-  font-family: var(--mono);
-  font-size: 0.72rem;
-  color: var(--ink-soft);
-  border: 1.5px dashed var(--line);
-  padding: 8px 10px;
-}
-
 mark.todo {
   background: rgba(138, 101, 8, 0.22);
   color: var(--ink);

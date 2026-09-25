@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
 
-/** Highlighted placeholder the site owner must replace. */
+/** Highlighted placeholder the site owner must still replace. */
 const Todo = ({ children }: { children: ReactNode }) => <mark className="todo">[{children}]</mark>
+
+const EMAIL = 'adam.michael97@proton.me'
+const Email = () => <a href={`mailto:${EMAIL}`}>{EMAIL}</a>
 
 function Shell({ title, nav, children }: { title: string; nav: (h: string) => void; children: ReactNode }) {
   return (
@@ -13,13 +16,7 @@ function Shell({ title, nav, children }: { title: string; nav: (h: string) => vo
         <h2>{title}</h2>
         <span />
       </header>
-      <div className="help-body">
-        <p className="legal-note">
-          Entwurf mit Platzhaltern — <mark className="todo">[markierte Stellen]</mark> vor dem Start ersetzen
-          und rechtlich prüfen lassen.
-        </p>
-        {children}
-      </div>
+      <div className="help-body">{children}</div>
     </div>
   )
 }
@@ -29,43 +26,48 @@ export function Impressum({ nav }: { nav: (h: string) => void }) {
     <Shell title="Impressum" nav={nav}>
       <h3>Angaben gemäß § 5 DDG</h3>
       <p>
-        <Todo>Vorname Nachname / Firma</Todo>
+        Michael Adam
         <br />
-        <Todo>Straße Hausnummer</Todo>
+        Schlosserstraße 15
         <br />
-        <Todo>PLZ Ort</Todo>
+        32051 Herford
         <br />
         Deutschland
       </p>
 
       <h3>Kontakt</h3>
       <p>
-        E-Mail: <Todo>E-Mail-Adresse</Todo>
+        E-Mail: <Email />
         <br />
-        Telefon: <Todo>Telefonnummer oder zweiter schneller Kontaktweg</Todo>
-      </p>
-
-      <h3>Umsatzsteuer-ID</h3>
-      <p>
-        Umsatzsteuer-Identifikationsnummer gemäß § 27a UStG: <Todo>USt-IdNr., falls vorhanden — sonst Abschnitt löschen</Todo>
+        Kontaktformular: <Todo>Link zum Kontaktformular</Todo>
       </p>
 
       <h3>Verantwortlich für den Inhalt nach § 18 Abs. 2 MStV</h3>
-      <p>
-        <Todo>Name, Anschrift</Todo>
-      </p>
+      <p>Michael Adam, Anschrift wie oben</p>
 
       <h3>Verbraucherstreitbeilegung</h3>
       <p>
-        <Todo>
-          Hinweis nach § 36 VSBG prüfen, z. B.: „Wir sind nicht bereit oder verpflichtet, an
-          Streitbeilegungsverfahren vor einer Verbraucherschlichtungsstelle teilzunehmen.“
-        </Todo>
+        Ich bin nicht bereit oder verpflichtet, an Streitbeilegungsverfahren vor einer
+        Verbraucherschlichtungsstelle teilzunehmen.
       </p>
 
-      <h3>Haftung für Inhalte und Links</h3>
+      <h3>Haftung für Inhalte</h3>
       <p>
-        <Todo>optionaler Haftungshinweis</Todo>
+        Die Inhalte dieser Seite wurden mit Sorgfalt erstellt. Für ihre Richtigkeit, Vollständigkeit und
+        Aktualität kann ich jedoch keine Gewähr übernehmen. Als Diensteanbieter bin ich nach den
+        allgemeinen Gesetzen für eigene Inhalte verantwortlich.
+      </p>
+      <p>
+        Alle Fälle, Personen, Namen und Handlungen in DEAD LETTERS sind frei erfunden. Ähnlichkeiten mit
+        realen Personen oder Ereignissen sind zufällig und nicht beabsichtigt.
+      </p>
+
+      <h3>Haftung für Links</h3>
+      <p>
+        Diese Seite kann Links zu externen Websites Dritter enthalten, auf deren Inhalte ich keinen Einfluss
+        habe. Für diese Inhalte ist stets der jeweilige Anbieter oder Betreiber verantwortlich. Zum
+        Zeitpunkt der Verlinkung waren keine Rechtsverstöße erkennbar. Sollten mir Rechtsverletzungen
+        bekannt werden, entferne ich die betreffenden Links umgehend.
       </p>
     </Shell>
   )
@@ -76,62 +78,89 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
     <Shell title="Datenschutzerklärung" nav={nav}>
       <h3>1. Verantwortlicher</h3>
       <p>
-        <Todo>Name, Anschrift, E-Mail-Adresse</Todo>
+        Michael Adam
+        <br />
+        Schlosserstraße 15
+        <br />
+        32051 Herford
+        <br />
+        Deutschland
+        <br />
+        E-Mail: <Email />
       </p>
 
       <h3>2. Überblick</h3>
       <p>
-        DEAD LETTERS läuft vollständig in Ihrem Browser. Es gibt kein Benutzerkonto, keinen eigenen
-        Server und kein Tracking. <Todo>Stand prüfen, sobald Werbung oder Statistik hinzukommt</Todo>
+        DEAD LETTERS läuft vollständig in Ihrem Browser. Es gibt kein Benutzerkonto und keinen eigenen
+        Server; Ihr Spielstand bleibt auf Ihrem Gerät. Welche Daten beim Hosting und bei Werbung
+        verarbeitet werden, erläutern die folgenden Abschnitte.
       </p>
 
       <h3>3. Hosting</h3>
       <p>
-        Die Website wird bereitgestellt von <Todo>Hoster, z. B. GitHub Pages — GitHub, Inc., USA</Todo>.
-        Beim Aufruf verarbeitet der Hoster technisch notwendige Daten (IP-Adresse, Datum und Uhrzeit,
-        abgerufene Datei, Browser-Informationen) in Server-Logfiles, um die Seite auszuliefern und
-        abzusichern. Rechtsgrundlage ist Art. 6 Abs. 1 lit. f DSGVO.{' '}
-        <Todo>Speicherdauer und Drittlandübermittlung (z. B. EU-US Data Privacy Framework) ergänzen</Todo>
+        Die Website wird über GitHub Pages bereitgestellt, einen Dienst der GitHub B.V., Prins
+        Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und der GitHub, Inc., 88 Colin P. Kelly Jr.
+        Street, San Francisco, CA 94107, USA. Beim Aufruf der Seite verarbeitet GitHub technisch
+        notwendige Daten wie Ihre IP-Adresse, Datum und Uhrzeit des Abrufs, die abgerufene Datei und
+        Informationen zu Ihrem Browser. GitHub speichert die IP-Adressen von Besuchern zu
+        Sicherheitszwecken. Rechtsgrundlage ist mein berechtigtes Interesse an einer sicheren und
+        zuverlässigen Bereitstellung der Website (Art. 6 Abs. 1 lit. f DSGVO).
+      </p>
+      <p>
+        Dabei können Daten in die USA übermittelt werden. GitHub, Inc. ist nach dem EU-US Data Privacy
+        Framework zertifiziert; für die USA besteht insoweit ein Angemessenheitsbeschluss der
+        EU-Kommission (Art. 45 DSGVO). Weitere Informationen:{' '}
+        <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" rel="noopener noreferrer" target="_blank">
+          Datenschutzerklärung von GitHub
+        </a>
+        .
       </p>
 
       <h3>4. Speicherung auf Ihrem Gerät</h3>
       <p>
         Spielfortschritt, Bestzeiten und Ihre Tages-Serie werden im lokalen Speicher (localStorage)
-        Ihres Browsers abgelegt und verlassen Ihr Gerät nicht. Für die Offline-Nutzung legt ein Service
-        Worker die App-Dateien im Browser-Cache ab. Diese Speicherung ist für den von Ihnen gewünschten
-        Dienst unbedingt erforderlich (§ 25 Abs. 2 Nr. 2 TDDDG). Sie können die Daten jederzeit über
-        die Einstellungen Ihres Browsers löschen. <Todo>prüfen</Todo>
+        Ihres Browsers abgelegt und nicht an mich oder Dritte übertragen. Für die Offline-Nutzung legt ein
+        Service Worker die Dateien der App im Browser-Cache ab. Diese Speicherung ist unbedingt
+        erforderlich, um das von Ihnen gewünschte Spiel bereitzustellen (§ 25 Abs. 2 Nr. 2 TDDDG). Sie
+        können diese Daten jederzeit über die Einstellungen Ihres Browsers löschen; dabei geht Ihr
+        Spielstand verloren.
       </p>
 
       <h3>5. Ergebnisse teilen</h3>
       <p>
         Wenn Sie Ihr Ergebnis teilen, wird ein Text an das Teilen-Menü Ihres Geräts oder die
-        Zwischenablage übergeben. Wir erhalten dabei keine Daten.
+        Zwischenablage übergeben. Ich erhalte dabei keine Daten.
       </p>
 
       <h3>6. Werbung und Einwilligung</h3>
       <p>
-        Derzeit wird keine Werbung angezeigt.{' '}
         <Todo>
-          Bei Aktivierung: Werbepartner, Zwecke, eingesetzte Consent-Management-Plattform,
-          Rechtsgrundlage (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG), Speicherdauer,
-          Drittlandübermittlung und Widerrufsmöglichkeit beschreiben
+          Abschnitt folgt, sobald Werbenetzwerk und Consent-Management-Plattform feststehen: Anbieter,
+          Zwecke, Rechtsgrundlage (Art. 6 Abs. 1 lit. a DSGVO, § 25 Abs. 1 TDDDG), Speicherdauer,
+          Drittlandübermittlung und Widerruf der Einwilligung
         </Todo>
       </p>
 
       <h3>7. Ihre Rechte</h3>
       <p>
         Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17),
-        Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch
-        (Art. 21). Eine erteilte Einwilligung können Sie jederzeit mit Wirkung für die Zukunft
-        widerrufen (Art. 7 Abs. 3). Sie können sich außerdem bei einer Datenschutz-Aufsichtsbehörde
-        beschweren (Art. 77), z. B. bei <Todo>zuständige Landesdatenschutzbehörde</Todo>.
+        Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen
+        Verarbeitungen auf Grundlage berechtigter Interessen (Art. 21). Eine erteilte Einwilligung
+        können Sie jederzeit mit Wirkung für die Zukunft widerrufen (Art. 7 Abs. 3). Wenden Sie sich
+        dazu einfach per E-Mail an mich.
+      </p>
+      <p>
+        Außerdem können Sie sich bei einer Datenschutz-Aufsichtsbehörde beschweren (Art. 77 DSGVO). Für
+        mich zuständig ist die Landesbeauftragte für Datenschutz und Informationsfreiheit
+        Nordrhein-Westfalen, Postfach 20 04 44, 40102 Düsseldorf,{' '}
+        <a href="https://www.ldi.nrw.de" rel="noopener noreferrer" target="_blank">
+          www.ldi.nrw.de
+        </a>
+        .
       </p>
 
       <h3>8. Stand</h3>
-      <p>
-        <Todo>Datum</Todo>
-      </p>
+      <p>25. September 2026</p>
     </Shell>
   )
 }
