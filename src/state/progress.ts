@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react'
-import { dateKey } from '../lib/daily'
+import { dateKey, dailyNumber, shiftDateKey } from '../lib/daily'
 
 export interface SolveRecord {
   seconds: number
@@ -9,10 +9,19 @@ export interface SolveRecord {
   at: number
 }
 
+/** First solve of a given daily case — what the share card reports. */
+export interface DailyResult {
+  number: number
+  caseId: number
+  seconds: number
+  hints: number
+  wrong: number
+}
+
 export interface Progress {
   v: 1
   solved: Record<number, SolveRecord>
-  daily: { last: string; streak: number; bestStreak: number }
+  daily: { last: string; streak: number; bestStreak: number; result?: DailyResult }
   helpSeen: boolean
 }
 
@@ -74,16 +83,32 @@ export function recordSolve(id: number, rec: Omit<SolveRecord, 'at'>, isDaily: b
 
   let daily = state.daily
   if (isDaily) {
-    const today = dateKey()
+    const now = new Date()
+    const today = dateKey(now)
     if (daily.last !== today) {
-      const yesterday = dateKey(new Date(Date.now() - 864e5))
-      const streak = daily.last === yesterday ? daily.streak + 1 : 1
-      daily = { last: today, streak, bestStreak: Math.max(streak, daily.bestStreak) }
+      const streak = daily.last === shiftDateKey(now, -1) ? daily.streak + 1 : 1
+      daily = {
+        last: today,
+        streak,
+        bestStreak: Math.max(streak, daily.bestStreak),
+        result: { number: dailyNumber(now), caseId: id, seconds: rec.seconds, hints: rec.hints, wrong: rec.wrong },
+      }
     }
   }
   state = { ...state, solved, daily }
   emit()
   return state
+}
+
+/** Streak still alive today: solved today or yesterday, else 0. */
+export function currentStreak(p: Progress, now = new Date()): number {
+  const { last, streak } = p.daily
+  return last === dateKey(now) || last === shiftDateKey(now, -1) ? streak : 0
+}
+
+/** Today's daily result, if the player has already solved it. */
+export function todaysDailyResult(p: Progress, now = new Date()): DailyResult | null {
+  return p.daily.last === dateKey(now) && p.daily.result?.number === dailyNumber(now) ? p.daily.result : null
 }
 
 export function markHelpSeen() {

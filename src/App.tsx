@@ -3,6 +3,7 @@ import Home from './components/Home'
 import CaseBrowser from './components/CaseBrowser'
 import CaseScreen from './components/CaseScreen'
 import HelpModal from './components/HelpModal'
+import { dailyCaseId } from './lib/daily'
 
 type Route =
   | { name: 'home' }
@@ -22,6 +23,7 @@ function parseHash(): Route {
     const id = Math.min(150, Math.max(1, Number(m[1])))
     return { name: 'case', id }
   }
+  if (path === '/daily') return { name: 'case', id: dailyCaseId() }
   if (path === '/help') return { name: 'help' }
   return { name: 'home' }
 }
