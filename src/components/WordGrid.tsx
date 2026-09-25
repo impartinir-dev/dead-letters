@@ -51,6 +51,11 @@ export default function WordGrid({
   const anchorRef = useRef<Cell | null>(null)
   const draggingRef = useRef(false)
   const selRef = useRef<number[]>([])
+  // keyboard: roving focus cursor + optional selection anchor
+  const [cursor, setCursor] = useState<Cell>({ r: 0, c: 0 })
+  const [keyAnchor, setKeyAnchor] = useState<Cell | null>(null)
+  const [announce, setAnnounce] = useState('')
+  const cellRefs = useRef<(HTMLDivElement | null)[]>([])
 
   const cellFromEvent = useCallback(
     (e: React.PointerEvent): Cell | null => {
@@ -102,6 +107,28 @@ export default function WordGrid({
     setSel(cells)
   }
 
+  const letterAt = (i: number) => grid[Math.floor(i / cols)][i % cols]
+
+  /** Check a finished selection against the bank (either reading direction). */
+  const commit = (cells: number[]): string | null => {
+    if (cells.length < 2) return null
+    const str = cells.map(letterAt).join('')
+    const rev = str.split('').reverse().join('')
+    if (bank.has(str)) {
+      onFound(str, cells)
+      return str
+    }
+    if (bank.has(rev)) {
+      onFound(rev, [...cells].reverse())
+      return rev
+    }
+    if (cells.length >= 3 && !found.has(str) && !found.has(rev)) {
+      setMissCells(new Set(cells))
+      onMiss?.()
+    }
+    return null
+  }
+
   const endDrag = (e: React.PointerEvent) => {
     if (!draggingRef.current) return
     draggingRef.current = false
@@ -112,15 +139,48 @@ export default function WordGrid({
     const cells = selRef.current
     selRef.current = []
     setSel([])
-    if (!a || cells.length < 2) return
+    if (a) commit(cells)
+  }
 
-    const str = cells.map((i) => grid[Math.floor(i / cols)][i % cols]).join('')
-    const rev = str.split('').reverse().join('')
-    if (bank.has(str)) onFound(str, cells)
-    else if (bank.has(rev)) onFound(rev, [...cells].reverse())
-    else if (cells.length >= 3 && !found.has(str) && !found.has(rev)) {
-      setMissCells(new Set(cells))
-      onMiss?.()
+  /* keyboard: arrows move, Enter/Space starts then ends a selection, Esc cancels */
+  const moveTo = (cell: Cell) => {
+    setCursor(cell)
+    cellRefs.current[cell.r * cols + cell.c]?.focus()
+    if (keyAnchor) setSel(cellsBetween(keyAnchor, cell))
+  }
+
+  const onKeyDown = (e: React.KeyboardEvent) => {
+    if (locked) return
+    const { r, c } = cursor
+    const clamp = (v: number, n: number) => Math.min(n - 1, Math.max(0, v))
+    const moves: Record<string, Cell> = {
+      ArrowUp: { r: clamp(r - 1, rows), c },
+      ArrowDown: { r: clamp(r + 1, rows), c },
+      ArrowLeft: { r, c: clamp(c - 1, cols) },
+      ArrowRight: { r, c: clamp(c + 1, cols) },
+      Home: { r, c: 0 },
+      End: { r, c: cols - 1 },
+    }
+    if (moves[e.key]) {
+      e.preventDefault()
+      moveTo(moves[e.key])
+    } else if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault()
+      if (!keyAnchor) {
+        setKeyAnchor(cursor)
+        setSel([r * cols + c])
+        setAnnounce(`Selection started at ${grid[r][c]}. Move to the last letter and press Enter.`)
+      } else {
+        const cells = cellsBetween(keyAnchor, cursor)
+        setKeyAnchor(null)
+        setSel([])
+        const word = commit(cells)
+        setAnnounce(word ? `Found ${word}.` : `${cells.map(letterAt).join('')} is not in the word bank.`)
+      }
+    } else if (e.key === 'Escape' && keyAnchor) {
+      setKeyAnchor(null)
+      setSel([])
+      setAnnounce('Selection cancelled.')
     }
   }
 
@@ -148,8 +208,11 @@ export default function WordGrid({
       onPointerMove={onPointerMove}
       onPointerUp={endDrag}
       onPointerCancel={endDrag}
+      onKeyDown={onKeyDown}
       role="grid"
-      aria-label="Word search grid"
+      aria-label="Word search grid. Use arrow keys to move, Enter to start and end a selection, Escape to cancel."
+      aria-rowcount={rows}
+      aria-colcount={cols}
     >
       <svg className="wgrid-streaks" viewBox={`0 0 ${cols} ${rows}`} preserveAspectRatio="none" aria-hidden>
         {streaks.map(({ cells, color }, i) => (
@@ -179,27 +242,48 @@ export default function WordGrid({
         )}
       </svg>
       <div className="wgrid-cells">
-        {grid.flatMap((row, r) =>
-          row.split('').map((ch, c) => {
-            const i = r * cols + c
-            const cls = [
-              'wcell',
-              selSet.has(i) ? 'sel' : '',
-              foundCells.has(i) ? 'found' : '',
-              missCells?.has(i) ? 'miss' : '',
-              messageCells?.has(i) ? 'msg' : '',
-              flash?.has(i) ? 'flash' : '',
-            ]
-              .filter(Boolean)
-              .join(' ')
-            return (
-              <div key={i} className={cls} aria-hidden>
-                {ch}
-              </div>
-            )
-          }),
-        )}
+        {grid.map((row, r) => (
+          <div key={r} role="row" className="wgrid-row">
+            {row.split('').map((ch, c) => {
+              const i = r * cols + c
+              const cls = [
+                'wcell',
+                selSet.has(i) ? 'sel' : '',
+                foundCells.has(i) ? 'found' : '',
+                missCells?.has(i) ? 'miss' : '',
+                messageCells?.has(i) ? 'msg' : '',
+                flash?.has(i) ? 'flash' : '',
+              ]
+                .filter(Boolean)
+                .join(' ')
+              const state = [
+                keyAnchor && keyAnchor.r === r && keyAnchor.c === c ? 'selection start' : '',
+                foundCells.has(i) ? 'part of a found word' : '',
+                messageCells?.has(i) ? 'leftover letter' : '',
+              ].filter(Boolean)
+              return (
+                <div
+                  key={i}
+                  ref={(el) => {
+                    cellRefs.current[i] = el
+                  }}
+                  className={cls}
+                  role="gridcell"
+                  tabIndex={cursor.r === r && cursor.c === c ? 0 : -1}
+                  aria-selected={selSet.has(i)}
+                  aria-label={`${ch}, row ${r + 1}, column ${c + 1}${state.length ? `, ${state.join(', ')}` : ''}`}
+                  onFocus={() => setCursor({ r, c })}
+                >
+                  {ch}
+                </div>
+              )
+            })}
+          </div>
+        ))}
       </div>
+      <p className="sr-only" aria-live="polite">
+        {announce}
+      </p>
     </div>
   )
 }

@@ -51,9 +51,15 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
       if (document.hidden) return
       setElapsed((Date.now() - startRef.current - pausedAccum.current) / 1000)
     }, 250)
+    // a case opened in a background tab starts paused
+    if (document.hidden && !hiddenAt.current) hiddenAt.current = Date.now()
     const onVis = () => {
       if (document.hidden) hiddenAt.current = Date.now()
-      else pausedAccum.current += Date.now() - hiddenAt.current
+      else if (hiddenAt.current) {
+        // only count a pause we actually saw start (visible without hidden must not subtract `now`)
+        pausedAccum.current += Date.now() - hiddenAt.current
+        hiddenAt.current = 0
+      }
     }
     document.addEventListener('visibilitychange', onVis)
     return () => {
@@ -100,7 +106,7 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
   const isWS = WORD_SEARCH_MECHANICS.includes(c.mechanic)
 
   return (
-    <div className={`page case-page ${shakeWrong ? 'shake' : ''}`}>
+    <div className={`page case-page ${isWS ? 'ws' : ''} ${shakeWrong ? 'shake' : ''}`}>
       <header className="case-head">
         <button
           className="btn-ghost"

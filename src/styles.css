@@ -513,9 +513,14 @@ body {
 .case-head h2 {
   margin: 0;
   font-size: 1.15rem;
-  white-space: nowrap;
+  line-height: 1.2;
+  /* long titles wrap to two lines instead of truncating */
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
   overflow: hidden;
-  text-overflow: ellipsis;
+  overflow-wrap: anywhere;
 }
 
 .timer-chip {
@@ -591,7 +596,9 @@ body {
 
 .wgrid {
   position: relative;
-  width: 100%;
+  /* never taller than ~60% of the viewport, so bank + hint bar stay on screen */
+  width: min(100%, 60vh, 60dvh);
+  align-self: center;
   aspect-ratio: 1;
   container-type: inline-size;
   user-select: none;
@@ -615,6 +622,31 @@ body {
   display: grid;
   grid-template-columns: repeat(var(--cols), 1fr);
   grid-template-rows: repeat(var(--cols), 1fr);
+}
+
+.wgrid-row {
+  display: contents;
+}
+
+.wcell:focus {
+  outline: none;
+}
+
+.wcell:focus-visible {
+  outline: 2.5px solid var(--red);
+  outline-offset: -2px;
+}
+
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 .wcell {
@@ -1153,6 +1185,10 @@ body {
   color: var(--ink);
 }
 
+.help-body p + p {
+  margin-top: 8px;
+}
+
 /* ------------------------------ new modes ------------------------------ */
 
 .mode {
@@ -1439,3 +1475,46 @@ body {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* --------------------------- laptop / desktop -------------------------- */
+
+/* Word-search cases go two-column on wide screens: the grid fills the
+   height on the left, the case file (intro, suspects, bank, actions) sits on
+   the right — the whole case fits a 1280x800 viewport without scrolling. */
+@media (min-width: 900px) and (min-height: 560px) {
+  .case-page.ws {
+    max-width: 1100px;
+    display: grid;
+    grid-template-columns: auto minmax(300px, 380px);
+    grid-template-rows: auto auto auto auto 1fr auto auto;
+    grid-template-areas:
+      'head head'
+      'grid flavor'
+      'grid suspects'
+      'grid mech'
+      'grid bank'
+      'grid modefoot'
+      'grid foot';
+    column-gap: 28px;
+    row-gap: 10px;
+    justify-content: center;
+    height: 100dvh;
+    min-height: 0;
+  }
+
+  .case-page.ws > .case-head { grid-area: head; margin-bottom: 0; }
+  .case-page.ws > .flavor { grid-area: flavor; }
+  .case-page.ws > .suspects { grid-area: suspects; }
+  .case-page.ws > .mech-tag { grid-area: mech; }
+  .case-page.ws > .bank { grid-area: bank; align-self: start; }
+  .case-page.ws > .mode-foot { grid-area: modefoot; }
+  .case-page.ws > .case-foot { grid-area: foot; margin-top: 0; }
+
+  .case-page.ws > .wgrid {
+    grid-area: grid;
+    align-self: start;
+    /* viewport height minus header + page padding */
+    width: min(calc(100dvh - 110px), 680px);
+  }
+}
+

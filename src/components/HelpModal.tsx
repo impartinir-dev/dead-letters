@@ -1,4 +1,7 @@
-import { MECHANIC_HELP } from '../lib/format'
+import { MECHANIC_HELP, MECHANIC_LABEL } from '../lib/format'
+
+const WORD_SEARCH = ['leftovers', 'lineup', 'elimination', 'anagram'] as const
+const PUZZLES = ['cryptogram', 'deduction', 'interrogation', 'timeline'] as const
 
 export default function HelpModal({ nav }: { nav: (h: string) => void }) {
   return (
@@ -13,24 +16,37 @@ export default function HelpModal({ nav }: { nav: (h: string) => void }) {
       <div className="help-body">
         <h3>The basics</h3>
         <p>
-          Every case is a word search. Drag across letters — in any direction the case allows — to
-          select a word. Find every word in the bank to clear the grid.
+          Every case opens with a victim and four suspects — each with a reason to want them dead.
+          Exactly one of them did it. Work the case, then name the killer.
         </p>
         <p>
-          Then solve the murder. Each case ends one of four ways:
+          Most cases are word searches: drag across letters (in any direction the case allows) to
+          select a word, or use the arrow keys and press Enter at the first and last letter. Find every
+          word in the bank to clear the grid.
         </p>
-        <h3>Dead letter</h3>
-        <p>{MECHANIC_HELP.leftovers}</p>
-        <h3>Suspect lineup</h3>
-        <p>{MECHANIC_HELP.lineup}</p>
-        <h3>Deduction</h3>
-        <p>{MECHANIC_HELP.elimination}</p>
-        <h3>Confession</h3>
-        <p>{MECHANIC_HELP.anagram}</p>
+
+        <h3>Word-search cases</h3>
+        {WORD_SEARCH.map((m) => (
+          <p key={m}>
+            <strong>{MECHANIC_LABEL[m]}.</strong> {MECHANIC_HELP[m]}
+          </p>
+        ))}
+
+        <h3>Puzzle cases</h3>
+        {PUZZLES.map((m) => (
+          <p key={m}>
+            <strong>{MECHANIC_LABEL[m]}.</strong> {MECHANIC_HELP[m]}
+          </p>
+        ))}
+
         <h3>Rules of the house</h3>
         <p>
-          Three hints per case. Solve in under two minutes for the lightning mark. A new daily case
-          keeps your streak alive. Progress is saved on this device.
+          Three hints per case. A wrong accusation costs you nothing but pride — it's counted as a false
+          accusation. Solve in under two minutes for the lightning mark.
+        </p>
+        <p>
+          A new daily case unlocks at midnight. Solve it every day to build your streak, then share your
+          result — it never gives away the answer. Progress is saved on this device.
         </p>
       </div>
     </div>
