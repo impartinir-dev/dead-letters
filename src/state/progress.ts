@@ -1,5 +1,6 @@
 import { useSyncExternalStore } from 'react'
-import { dateKey, dailyNumber, shiftDateKey } from '../lib/daily'
+import { dateKey, dailyNumber } from '../lib/daily'
+import type { DailyStats } from '../lib/stats'
 
 export interface SolveRecord {
   seconds: number
@@ -16,13 +17,24 @@ export interface DailyResult {
   seconds: number
   hints: number
   wrong: number
+  /** reported to the global stats API (or permanently refused by it) */
+  submitted?: boolean
+  /** latest global numbers for this daily, incl. how many players it beat */
+  stats?: DailyStats
 }
 
 export interface Progress {
   v: 1
   solved: Record<number, SolveRecord>
-  daily: { last: string; streak: number; bestStreak: number; result?: DailyResult }
+  /**
+   * `lastNumber` = daily number of the last solved daily (streaks count daily
+   * numbers, so a solve that crosses midnight still counts for its own case).
+   * `last` is its local date, kept for saves made before `lastNumber` existed.
+   */
+  daily: { last: string; lastNumber?: number; streak: number; bestStreak: number; result?: DailyResult }
   helpSeen: boolean
+  /** player turned off anonymous daily stats */
+  statsOptOut?: boolean
 }
 
 const KEY = 'deadletters.v1'
@@ -59,6 +71,14 @@ function emit() {
   for (const l of listeners) l()
 }
 
+// keep open tabs in sync: another tab's save replaces this tab's copy
+;(globalThis as { addEventListener?: (type: string, fn: (e: { key: string | null }) => void) => void })
+  .addEventListener?.('storage', (e) => {
+    if (e.key !== KEY) return
+    state = load()
+    for (const l of listeners) l()
+  })
+
 export function subscribe(fn: () => void): () => void {
   listeners.add(fn)
   return () => listeners.delete(fn)
@@ -76,23 +96,42 @@ export function isSolved(id: number): boolean {
   return id in state.solved
 }
 
-export function recordSolve(id: number, rec: Omit<SolveRecord, 'at'>, isDaily: boolean): Progress {
+/** Daily number of the last solved daily (0 = none yet). */
+function lastSolvedDaily(d: Progress['daily']): number {
+  if (d.lastNumber) return d.lastNumber
+  if (!d.last) return 0
+  const [y, m, day] = d.last.split('-').map(Number)
+  return dailyNumber(new Date(y, m - 1, day))
+}
+
+/**
+ * Record a solve. `dailyNo` is the daily case number the case was opened as
+ * (null for archive play); the first solve of each daily sets the streak and
+ * the result the share card and global stats report.
+ */
+export function recordSolve(id: number, rec: Omit<SolveRecord, 'at'>, dailyNo: number | null): Progress {
   const prev = state.solved[id]
   const best = prev && prev.seconds < rec.seconds ? prev.seconds : rec.seconds
   const solved = { ...state.solved, [id]: { ...rec, seconds: best, at: Date.now() } }
 
   let daily = state.daily
-  if (isDaily) {
-    const now = new Date()
-    const today = dateKey(now)
-    if (daily.last !== today) {
-      const streak = daily.last === shiftDateKey(now, -1) ? daily.streak + 1 : 1
-      daily = {
-        last: today,
-        streak,
-        bestStreak: Math.max(streak, daily.bestStreak),
-        result: { number: dailyNumber(now), caseId: id, seconds: rec.seconds, hints: rec.hints, wrong: rec.wrong },
-      }
+  const last = lastSolvedDaily(daily)
+  // only a newer daily counts (an older one finished late never overwrites)
+  if (dailyNo !== null && dailyNo > last) {
+    const streak = last === dailyNo - 1 ? daily.streak + 1 : 1
+    daily = {
+      last: dateKey(),
+      lastNumber: dailyNo,
+      streak,
+      bestStreak: Math.max(streak, daily.bestStreak),
+      result: {
+        number: dailyNo,
+        caseId: id,
+        seconds: rec.seconds,
+        hints: rec.hints,
+        wrong: rec.wrong,
+        submitted: false,
+      },
     }
   }
   state = { ...state, solved, daily }
@@ -100,15 +139,29 @@ export function recordSolve(id: number, rec: Omit<SolveRecord, 'at'>, isDaily: b
   return state
 }
 
-/** Streak still alive today: solved today or yesterday, else 0. */
+/** Streak still alive: today's or yesterday's daily solved, else 0. */
 export function currentStreak(p: Progress, now = new Date()): number {
-  const { last, streak } = p.daily
-  return last === dateKey(now) || last === shiftDateKey(now, -1) ? streak : 0
+  const last = lastSolvedDaily(p.daily)
+  const today = dailyNumber(now)
+  return last === today || last === today - 1 ? p.daily.streak : 0
 }
 
 /** Today's daily result, if the player has already solved it. */
 export function todaysDailyResult(p: Progress, now = new Date()): DailyResult | null {
-  return p.daily.last === dateKey(now) && p.daily.result?.number === dailyNumber(now) ? p.daily.result : null
+  return p.daily.result?.number === dailyNumber(now) ? p.daily.result : null
+}
+
+/** Store the stats API's answer for daily #number (ignored if a newer daily replaced it). */
+export function saveDailyStats(number: number, patch: { stats?: DailyStats; submitted?: boolean }) {
+  const r = state.daily.result
+  if (!r || r.number !== number) return
+  state = { ...state, daily: { ...state.daily, result: { ...r, ...patch } } }
+  emit()
+}
+
+export function setStatsOptOut(optOut: boolean) {
+  state = { ...state, statsOptOut: optOut }
+  emit()
 }
 
 export function markHelpSeen() {

@@ -84,7 +84,7 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
     if (!c || solved) return
     const seconds = Math.max(1, Math.round(elapsed))
     setSolvedAt(seconds)
-    recordSolve(c.id, { seconds, hints: 3 - hintsLeft, wrong, challenge: seconds <= 120 }, daily !== null)
+    recordSolve(c.id, { seconds, hints: 3 - hintsLeft, wrong, challenge: seconds <= 120 }, daily)
     if (navigator.vibrate) navigator.vibrate([30, 60, 30])
   }
 

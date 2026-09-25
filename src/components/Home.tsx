@@ -2,10 +2,11 @@ import { useState } from 'react'
 import { CASE_INDEX } from '../lib/data'
 import { caseForDaily, dailyNumber } from '../lib/daily'
 import { fmtTime, MECHANIC_LABEL } from '../lib/format'
-import { emojiRow } from '../lib/share'
+import { emojiRow, standingLine } from '../lib/share'
 import { shareResult } from '../lib/shareDevice'
 import { useProgress, solvedCount, nextUnsolvedId, currentStreak, todaysDailyResult } from '../state/progress'
 import Countdown, { useNow } from './Countdown'
+import { statsActive, useDailyStats, useDailyResultStats } from '../state/dailyStats'
 
 const VOLUME_NAMES = ['HOMICIDE 101', 'COLD TRAILS', 'MASTER SLEUTH']
 
@@ -21,6 +22,10 @@ export default function Home({ nav }: { nav: (h: string) => void }) {
   const solved = solvedCount()
   const continueId = nextUnsolvedId()
   const [shareState, setShareState] = useState<keyof typeof SHARE_LABEL | null>(null)
+  const live = statsActive(progress)
+  const dayStats = useDailyStats(n, live && !result)
+  const mine = useDailyResultStats(n, live && !!result)
+  const standing = mine ? standingLine(mine) : null
 
   return (
     <div className="page home">
@@ -53,6 +58,13 @@ export default function Home({ nav }: { nav: (h: string) => void }) {
         </div>
         <h2 className="daily-title">{daily.title}</h2>
         <p className="daily-meta">{MECHANIC_LABEL[daily.mechanic]}</p>
+        {!result && dayStats && (
+          <p className="daily-crowd">
+            {dayStats.solves > 0
+              ? `${dayStats.solves.toLocaleString()} detective${dayStats.solves === 1 ? ' has' : 's have'} closed this case today`
+              : 'Be the first detective to close it today'}
+          </p>
+        )}
 
         {result ? (
           <>
@@ -60,12 +72,21 @@ export default function Home({ nav }: { nav: (h: string) => void }) {
               <i className="mini-stamp">SOLVED</i> in {fmtTime(result.seconds)} · {result.hints} hint
               {result.hints === 1 ? '' : 's'} · {result.wrong} false accusation{result.wrong === 1 ? '' : 's'}
             </p>
+            {mine && (
+              <p className="daily-standing">
+                {standing ?? 'Case closed'} · {mine.solves.toLocaleString()} solved today
+              </p>
+            )}
             <p className="daily-emoji" aria-hidden>
               {emojiRow(result)}
             </p>
             <button
               className="btn btn-primary big"
-              onClick={async () => setShareState(await shareResult({ ...result, daily: result.number }))}
+              onClick={async () =>
+                setShareState(
+                  await shareResult({ ...result, daily: result.number, beatPct: mine?.beatPct, first: mine?.first }),
+                )
+              }
             >
               {shareState ? SHARE_LABEL[shareState] : 'Share result'}
             </button>

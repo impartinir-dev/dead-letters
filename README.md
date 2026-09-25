@@ -12,7 +12,7 @@ npm run generate   # regenerate the 150 case files → src/data/
 npm run dev        # dev server
 npm run build      # static build → dist/ (deployable anywhere)
 npm run preview    # serve the production build
-npm test           # validates all 150 cases + daily/share logic
+npm test           # validates all 150 cases, daily/share logic, stats worker
 npm run typecheck
 npm run icons      # regenerate PWA icons
 npm run og         # regenerate the 1200×630 social share image
@@ -50,8 +50,8 @@ card ("DEAD LETTERS #47 🔍 Solved in 2:14 · 1 hint · 0 false accusations").
 
 ## How it's built
 
-- **Vite + React + TypeScript**, hash router, no backend. Progress in
-  `localStorage`. PWA (installable, fully offline) via `vite-plugin-pwa`.
+- **Vite + React + TypeScript**, hash router, static hosting (the optional
+  stats worker below is the only server part). Progress in `localStorage`. PWA (installable, fully offline) via `vite-plugin-pwa`.
 - **Generator** (`src/generator/`): deterministic seeded RNG → word placement
   → decoy fill → exact-length leftover messages (clue core + in-world padding
   phrases, never naming a wrong room/weapon/suspect). 35 hand-authored themes,
@@ -62,11 +62,17 @@ card ("DEAD LETTERS #47 🔍 Solved in 2:14 · 1 hint · 0 false accusations").
   killer and no one else; lineups/deductions/interrogations/timelines have
   unique solutions; stories stay inside their theme; no filler padding; share
   text never leaks an answer.
+- **Global daily stats** (optional, `worker/`): a Cloudflare Worker + D1
+  database that stores only anonymous counters per daily case and powers
+  "1,284 detectives solved today · faster than 71%". Off until
+  `STATS_API_URL` is set in `src/config.ts`; setup in `worker/README.md`.
+  Players can opt out in the handbook; the privacy policy adds its section
+  automatically once it's on.
 - **Accessibility:** the grid is keyboard-playable (arrow keys, Enter to start
   and end a selection, Escape to cancel) with ARIA grid semantics and a live
   region announcing finds.
 - **Legal / ads:** Impressum and Datenschutzerklärung pages (`#/impressum`,
-  `#/datenschutz`) with placeholders to fill in. Ad slots and the consent gate
+  `#/datenschutz`); optional sections follow `src/config.ts`. Ad slots and the consent gate
   are scaffolded but off — see `src/config.ts` and `src/lib/consent.ts`.
 
 ## Deploy

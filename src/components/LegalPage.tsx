@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react'
-import { CONTACT_FORM_URL } from '../config'
+import { CONTACT_FORM_URL, STATS_API_URL } from '../config'
 
 /** Highlighted placeholder the site owner must still replace. */
 const Todo = ({ children }: { children: ReactNode }) => <mark className="todo">[{children}]</mark>
@@ -82,9 +82,13 @@ export function Impressum({ nav }: { nav: (h: string) => void }) {
 }
 
 export function Datenschutz({ nav }: { nav: (h: string) => void }) {
+  const stats = STATS_API_URL !== ''
+  // consecutive section numbers, whichever optional sections are shown
+  let section = 0
+  const n = () => `${++section}.`
   return (
     <Shell title="Datenschutzerklärung" nav={nav}>
-      <h3>1. Verantwortlicher</h3>
+      <h3>{n()} Verantwortlicher</h3>
       <p>
         Michael Adam
         <br />
@@ -97,15 +101,15 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         E-Mail: <Email />
       </p>
 
-      <h3>2. Überblick</h3>
+      <h3>{n()} Überblick</h3>
       <p>
-        DEAD LETTERS läuft vollständig in Ihrem Browser. Es gibt kein Benutzerkonto und keinen eigenen
-        Server; Ihr Spielstand bleibt auf Ihrem Gerät. DEAD LETTERS zeigt keine Werbung und verwendet
-        keine Analyse- oder Tracking-Dienste. Welche Daten beim Hosting und bei Kontaktanfragen
-        verarbeitet werden, erläutern die folgenden Abschnitte.
+        DEAD LETTERS läuft vollständig in Ihrem Browser. Es gibt kein Benutzerkonto; Ihr Spielstand
+        bleibt auf Ihrem Gerät. DEAD LETTERS zeigt keine Werbung und verwendet keine Analyse- oder
+        Tracking-Dienste. Welche Daten beim Hosting{stats ? ', für die anonyme Tagesstatistik' : ''} und
+        bei Kontaktanfragen verarbeitet werden, erläutern die folgenden Abschnitte.
       </p>
 
-      <h3>3. Hosting</h3>
+      <h3>{n()} Hosting</h3>
       <p>
         Die Website wird über GitHub Pages bereitgestellt, einen Dienst der GitHub B.V., Prins
         Bernhardplein 200, 1097 JB Amsterdam, Niederlande, und der GitHub, Inc., 88 Colin P. Kelly Jr.
@@ -125,23 +129,52 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         .
       </p>
 
-      <h3>4. Speicherung auf Ihrem Gerät</h3>
+      <h3>{n()} Speicherung auf Ihrem Gerät</h3>
       <p>
         Spielfortschritt, Bestzeiten und Ihre Tages-Serie werden im lokalen Speicher (localStorage)
-        Ihres Browsers abgelegt und nicht an mich oder Dritte übertragen. Für die Offline-Nutzung legt ein
-        Service Worker die Dateien der App im Browser-Cache ab. Diese Speicherung ist unbedingt
+        Ihres Browsers abgelegt und nicht an mich oder Dritte
+        übertragen{stats ? ' – mit Ausnahme der anonymen Tagesstatistik (siehe unten)' : ''}. Für die
+        Offline-Nutzung legt ein Service Worker die Dateien der App im Browser-Cache ab. Diese Speicherung ist unbedingt
         erforderlich, um das von Ihnen gewünschte Spiel bereitzustellen (§ 25 Abs. 2 Nr. 2 TDDDG). Sie
         können diese Daten jederzeit über die Einstellungen Ihres Browsers löschen; dabei geht Ihr
         Spielstand verloren.
       </p>
 
-      <h3>5. Ergebnisse teilen</h3>
+      <h3>{n()} Ergebnisse teilen</h3>
       <p>
         Wenn Sie Ihr Ergebnis teilen, wird ein Text an das Teilen-Menü Ihres Geräts oder die
         Zwischenablage übergeben. Ich erhalte dabei keine Daten.
       </p>
 
-      <h3>6. Kontaktformular</h3>
+      {stats && (
+        <>
+          <h3>{n()} Anonyme Tagesstatistik</h3>
+          <p>
+            Wenn Sie den Fall des Tages lösen, übermittelt die App die Nummer des Tagesfalls, Ihre
+            Lösungszeit sowie die Zahl der genutzten Hinweise und falschen Beschuldigungen an einen
+            Statistikdienst, den ich bei der Cloudflare, Inc., 101 Townsend St., San Francisco, CA 94107,
+            USA, betreibe (Cloudflare Workers und D1). Zudem ruft die App die aktuelle Statistik des
+            Tagesfalls ab, um anzuzeigen, wie viele Spielerinnen und Spieler ihn gelöst haben und wie Ihr
+            Ergebnis im Vergleich abschneidet.
+          </p>
+          <p>
+            Gespeichert werden ausschließlich zusammengefasste Zähler je Tagesfall, etwa die Anzahl der
+            Lösungen je Zeitspanne von fünf Sekunden. Einzelne Ergebnisse, IP-Adressen oder Kennungen, die
+            einen Rückschluss auf Sie oder Ihr Gerät erlauben, werden nicht gespeichert. Ihre IP-Adresse
+            wird bei jeder Anfrage technisch verarbeitet und kurzzeitig genutzt, um missbräuchlich viele
+            Anfragen abzuwehren, aber nicht dauerhaft gespeichert.
+          </p>
+          <p>
+            Rechtsgrundlage ist mein berechtigtes Interesse, Ihnen anonyme Vergleichswerte anzuzeigen und
+            den Dienst vor Missbrauch zu schützen (Art. 6 Abs. 1 lit. f DSGVO). Dabei können Daten in die
+            USA übermittelt werden; Cloudflare, Inc. ist nach dem EU-US Data Privacy Framework
+            zertifiziert. Sie können die Übermittlung jederzeit in der Spielanleitung („How to play“) unter
+            „Anonymous daily stats“ abschalten.
+          </p>
+        </>
+      )}
+
+      <h3>{n()} Kontaktformular</h3>
       <p>
         Für Anfragen nutze ich ein Formular des Anbieters Tally BV, Sint-Pietersnieuwstraat 11, 9000
         Gent, Belgien. Das Formular öffnet sich auf einer Seite von Tally; erst dann verarbeitet Tally
@@ -157,14 +190,14 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         schreiben.
       </p>
 
-      <h3>7. Werbung und Analyse</h3>
+      <h3>{n()} Werbung und Analyse</h3>
       <p>
         DEAD LETTERS zeigt derzeit keine Werbung an und setzt keine Cookies oder vergleichbaren
-        Technologien zu Werbe- oder Analysezwecken ein. Sollte sich das ändern, wird diese
+        Technologien zu Werbe- oder Analysezwecken ein{stats ? '; die anonyme Tagesstatistik (siehe oben) dient nicht der Analyse Ihres Verhaltens' : ''}. Sollte sich das ändern, wird diese
         Datenschutzerklärung vorher angepasst und Ihre Einwilligung eingeholt, wo sie erforderlich ist.
       </p>
 
-      <h3>8. Ihre Rechte</h3>
+      <h3>{n()} Ihre Rechte</h3>
       <p>
         Sie haben das Recht auf Auskunft (Art. 15 DSGVO), Berichtigung (Art. 16), Löschung (Art. 17),
         Einschränkung der Verarbeitung (Art. 18), Datenübertragbarkeit (Art. 20) und Widerspruch gegen
@@ -182,7 +215,7 @@ export function Datenschutz({ nav }: { nav: (h: string) => void }) {
         .
       </p>
 
-      <h3>9. Stand</h3>
+      <h3>{n()} Stand</h3>
       <p>25. September 2026</p>
     </Shell>
   )

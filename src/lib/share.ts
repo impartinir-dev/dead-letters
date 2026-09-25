@@ -7,6 +7,9 @@ export interface ShareResult {
   seconds: number
   hints: number
   wrong: number
+  /** global stats, when known: share of today's players beaten / first solver */
+  beatPct?: number | null
+  first?: boolean
 }
 
 const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
@@ -22,6 +25,14 @@ export function emojiRow(r: Pick<ShareResult, 'seconds' | 'hints' | 'wrong'>): s
   return r.seconds <= 120 ? `${row} ⚡` : row
 }
 
+/** "Faster than 71% of detectives" — only when it's a boast worth sharing. */
+export function standingLine(r: Pick<ShareResult, 'beatPct' | 'first'>): string | null {
+  if (r.first) return 'First detective to crack it today'
+  if (r.beatPct === 100) return 'Faster than every other detective so far today'
+  if (typeof r.beatPct === 'number' && r.beatPct >= 1) return `Faster than ${r.beatPct}% of detectives`
+  return null
+}
+
 /**
  * Spoiler-free, group-chat-ready result. Never includes the title, names,
  * weapon, location or any answer — only the case number and how it went.
@@ -32,6 +43,7 @@ export function shareText(r: ShareResult, baseUrl: string): string {
   const stats =
     `Solved in ${fmtTime(r.seconds)} · ${plural(r.hints, 'hint')} · ` +
     `${plural(r.wrong, 'false accusation')}`
+  const standing = standingLine(r)
   const link = `${baseUrl}#/${r.daily !== null ? 'daily' : `case/${r.caseId}`}`
-  return `${head}\n${stats}\n${emojiRow(r)}\n${link}`
+  return [head, stats, ...(standing ? [standing] : []), emojiRow(r), link].join('\n')
 }

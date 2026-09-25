@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import type { CaseFile } from '../src/generator/types.ts'
 import { LAUNCH_DATE } from '../src/config.ts'
 import { dailyNumber, caseForDaily, dailyCaseId, msUntilNextDaily, shiftDateKey } from '../src/lib/daily.ts'
-import { shareText, emojiRow } from '../src/lib/share.ts'
+import { shareText, emojiRow, standingLine } from '../src/lib/share.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const cases: CaseFile[] = [1, 2, 3].flatMap((v) =>
@@ -59,6 +59,14 @@ describe('share text', () => {
     )
   })
 
+  it('adds a standing line only when it is worth bragging about', () => {
+    const r = { caseId: 12, daily: 47, seconds: 134, hints: 1, wrong: 0 }
+    expect(shareText({ ...r, beatPct: 71 }, base).split('\n')[2]).toBe('Faster than 71% of detectives')
+    expect(shareText({ ...r, beatPct: 0 }, base).split('\n')).toHaveLength(4)
+    expect(shareText({ ...r, beatPct: null, first: true }, base)).toContain('First detective to crack it today')
+    expect(standingLine({ beatPct: 100 })).toBe('Faster than every other detective so far today')
+  })
+
   it('shows speed, hints and false accusations in the emoji row', () => {
     expect(emojiRow({ seconds: 90, hints: 0, wrong: 0 })).toBe('🟩🟩🟩🟩🟩 ⚡')
     expect(emojiRow({ seconds: 300, hints: 2, wrong: 1 })).toBe('🟩🟩🟨🟨🟥')
@@ -75,5 +83,32 @@ describe('share text', () => {
       ]
       for (const s of secrets) expect(text, s).not.toContain(s.toLowerCase())
     }
+  })
+})
+
+describe('daily progress', async () => {
+  const { recordSolve, currentStreak, getProgress } = await import('../src/state/progress.ts')
+  const rec = { seconds: 90, hints: 0, wrong: 0, challenge: true }
+
+  it('keys the daily result and streak by daily number, not by clock', () => {
+    recordSolve(101, rec, 5) // daily #5
+    recordSolve(102, rec, 6) // #6 — even if it was finished after midnight
+    expect(getProgress().daily).toMatchObject({ lastNumber: 6, streak: 2, result: { number: 6, caseId: 102 } })
+    expect(currentStreak(getProgress(), launch(5))).toBe(2) // on day #6
+    expect(currentStreak(getProgress(), launch(6))).toBe(2) // #7: still alive
+    expect(currentStreak(getProgress(), launch(7))).toBe(0) // #8: broken
+  })
+
+  it('never lets an older daily finished late overwrite a newer one', () => {
+    recordSolve(103, rec, 5)
+    expect(getProgress().daily).toMatchObject({ lastNumber: 6, result: { number: 6 } })
+    recordSolve(104, rec, 8) // skipped #7 → streak restarts
+    expect(getProgress().daily).toMatchObject({ lastNumber: 8, streak: 1 })
+  })
+
+  it('archive solves never touch the daily', () => {
+    const before = getProgress().daily
+    recordSolve(1, rec, null)
+    expect(getProgress().daily).toBe(before)
   })
 })

@@ -1,9 +1,12 @@
 import { MECHANIC_HELP, MECHANIC_LABEL } from '../lib/format'
+import { statsConfigured } from '../lib/stats'
+import { setStatsOptOut, useProgress } from '../state/progress'
 
 const WORD_SEARCH = ['leftovers', 'lineup', 'elimination', 'anagram'] as const
 const PUZZLES = ['cryptogram', 'deduction', 'interrogation', 'timeline'] as const
 
 export default function HelpModal({ nav }: { nav: (h: string) => void }) {
+  const optOut = useProgress().statsOptOut ?? false
   return (
     <div className="page help">
       <header className="browser-head">
@@ -48,6 +51,21 @@ export default function HelpModal({ nav }: { nav: (h: string) => void }) {
           A new daily case unlocks at midnight. Solve it every day to build your streak, then share your
           result — it never gives away the answer. Progress is saved on this device.
         </p>
+
+        {statsConfigured() && (
+          <>
+            <h3>Anonymous daily stats</h3>
+            <p>
+              When you solve the daily case, your time, hints and false accusations are added to anonymous
+              counters, so everyone can see how they compare. No names, accounts or IP addresses are stored.
+            </p>
+            <p>
+              <button className="btn" onClick={() => setStatsOptOut(!optOut)} aria-pressed={!optOut}>
+                {optOut ? 'Stats are off — turn on' : 'Stats are on — turn off'}
+              </button>
+            </p>
+          </>
+        )}
       </div>
     </div>
   )

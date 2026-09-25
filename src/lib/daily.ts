@@ -27,6 +27,11 @@ export function dailyNumber(d = new Date()): number {
   return Math.max(1, daysBetween(LAUNCH_DATE, dateKey(d)) + 1)
 }
 
+/** True from LAUNCH_DATE on (local date) — before that the daily is a preview. */
+export function isLaunched(d = new Date()): boolean {
+  return daysBetween(LAUNCH_DATE, dateKey(d)) >= 0
+}
+
 /** Fixed, shuffled order of all 150 cases — no repeat for 150 days. */
 const DAILY_ORDER = shuffle(
   mulberry32(0xdead1e77),
