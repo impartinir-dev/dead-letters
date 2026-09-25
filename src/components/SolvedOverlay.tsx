@@ -5,6 +5,8 @@ import { emojiRow } from '../lib/share'
 import { shareResult } from '../lib/shareDevice'
 import { nextUnsolvedId } from '../state/progress'
 import Countdown, { useNow } from './Countdown'
+import { AdSlot, Interstitial } from './Ads'
+import { noteSolve } from '../lib/ads'
 
 interface Props {
   c: CaseFile
@@ -21,6 +23,12 @@ const SHARE_LABEL = { shared: 'Shared!', copied: 'Copied!', cancelled: 'Share re
 export default function SolvedOverlay({ c, seconds, hints, wrong, daily, nav }: Props) {
   const [shareState, setShareState] = useState<keyof typeof SHARE_LABEL | null>(null)
   const now = useNow()
+  // decided once per solve; only ever true when ads are enabled and consented
+  const [interstitialDue] = useState(noteSolve)
+  const [pending, setPending] = useState<string | null>(null)
+  const goToCase = (hash: string) => (interstitialDue ? setPending(hash) : nav(hash))
+
+  if (pending) return <Interstitial onContinue={() => nav(pending)} />
   const role = c.suspects.find((s) => s.name === c.killer)?.role
   const share = async () => setShareState(await shareResult({ caseId: c.id, daily, seconds, hints, wrong }))
   const shareBtn = (primary: boolean) => (
@@ -61,14 +69,14 @@ export default function SolvedOverlay({ c, seconds, hints, wrong, daily, nav }: 
           {daily !== null ? (
             <>
               {shareBtn(true)}
-              <button className="btn" onClick={() => nav(`#/case/${nextUnsolvedId()}`)}>
+              <button className="btn" onClick={() => goToCase(`#/case/${nextUnsolvedId()}`)}>
                 Keep playing the archive
               </button>
             </>
           ) : (
             <>
               {c.id < 150 && (
-                <button className="btn btn-primary" onClick={() => nav(`#/case/${c.id + 1}`)}>
+                <button className="btn btn-primary" onClick={() => goToCase(`#/case/${c.id + 1}`)}>
                   Next case
                 </button>
               )}
@@ -85,6 +93,7 @@ export default function SolvedOverlay({ c, seconds, hints, wrong, daily, nav }: 
           </p>
         )}
       </div>
+      <AdSlot placement="overlay" />
     </div>
   )
 }

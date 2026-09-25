@@ -353,8 +353,27 @@ body {
   margin-top: auto;
   padding-top: 24px;
   display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.home-foot-row {
+  display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.legal-links {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 0.68rem;
+  color: var(--ink-soft);
+}
+
+.legal-links a {
+  color: var(--ink-soft);
 }
 
 /* ------------------------------ browser -------------------------------- */
@@ -1138,9 +1157,8 @@ body {
   gap: 8px;
 }
 
-.overlay-card {
-  max-height: calc(100dvh - 40px);
-  overflow-y: auto;
+.overlay > * {
+  flex-shrink: 0;
 }
 
 .overlay-daily {
@@ -1516,5 +1534,110 @@ body {
     /* viewport height minus header + page padding */
     width: min(calc(100dvh - 110px), 680px);
   }
+}
+
+/* -------------------------------- legal -------------------------------- */
+
+.legal-note {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  color: var(--ink-soft);
+  border: 1.5px dashed var(--line);
+  padding: 8px 10px;
+}
+
+mark.todo {
+  background: rgba(138, 101, 8, 0.22);
+  color: var(--ink);
+  padding: 0 3px;
+  border-radius: 2px;
+}
+
+/* ------------------------ ads (off by default) ------------------------- */
+
+.overlay {
+  flex-direction: column;
+  gap: 12px;
+  /* the overlay scrolls as a whole (card + ad slot); auto margins keep it
+     centred when there is room */
+  justify-content: flex-start;
+  overflow-y: auto;
+}
+
+.overlay > :first-child {
+  margin-top: auto;
+}
+
+.overlay > :last-child {
+  margin-bottom: auto;
+}
+
+.ad-slot {
+  width: 100%;
+  max-width: 400px;
+  background: var(--paper2);
+  border: 1.5px dashed var(--line);
+  padding: 6px;
+}
+
+.ad-label {
+  display: block;
+  font-family: var(--mono);
+  font-size: 0.56rem;
+  letter-spacing: 0.2em;
+  color: var(--ink-soft);
+  margin-bottom: 4px;
+}
+
+/* reserve space so the ad never shifts content around */
+.ad-box {
+  min-height: 100px;
+}
+
+.ad-interstitial .ad-box {
+  min-height: 250px;
+}
+
+.interstitial-card {
+  width: 100%;
+  max-width: 400px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.consent-banner {
+  position: fixed;
+  left: 50%;
+  bottom: calc(env(safe-area-inset-bottom) + 12px);
+  transform: translateX(-50%);
+  width: min(460px, calc(100% - 24px));
+  z-index: 80;
+  background: var(--paper2);
+  border: 2px solid var(--ink);
+  box-shadow: 4px 4px 0 var(--shadow);
+  padding: 12px 14px;
+  font-size: 0.85rem;
+}
+
+.consent-banner p {
+  margin: 0 0 10px;
+  line-height: 1.4;
+}
+
+.consent-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+button.link {
+  background: none;
+  border: none;
+  padding: 0;
+  color: var(--red);
+  text-decoration: underline;
+  font: inherit;
+  cursor: pointer;
 }
 
