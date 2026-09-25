@@ -47,7 +47,8 @@ export default function CaseBrowser({ nav, initialVol }: { nav: (h: string) => v
               </span>
               <span className="case-card-title">{e.title}</span>
               <span className="case-card-meta">
-                {MECHANIC_LABEL[e.mechanic]} · {e.rows}×{e.rows}
+                {MECHANIC_LABEL[e.mechanic]}
+                {e.rows > 0 ? ` · ${e.rows}×${e.rows}` : ''}
               </span>
               {rec ? (
                 <span className="case-card-done">

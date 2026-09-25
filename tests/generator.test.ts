@@ -3,9 +3,16 @@ import { readFileSync } from 'node:fs'
 import { join, dirname } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import type { CaseFile, CaseIndexEntry } from '../src/generator/types.ts'
-import { DIRS, cellsOf } from '../src/generator/grid.ts'
+import { WORD_SEARCH_MECHANICS } from '../src/generator/types.ts'
+import { DIRS } from '../src/generator/grid.ts'
 import { generateCase } from '../src/generator/index.ts'
 import { TRAIT_VALUES } from '../src/generator/pools.ts'
+import {
+  countWorlds,
+  interrogationConsistent,
+  statementHolds,
+  countOrders,
+} from '../src/generator/modes.ts'
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..')
 const cases: CaseFile[] = [1, 2, 3].flatMap((v) =>
@@ -50,52 +57,70 @@ describe('case corpus', () => {
     expect(new Set(cases.map((c) => c.title)).size).toBe(150)
   })
 
-  it('all mechanics represented', () => {
+  it('all eight mechanics represented', () => {
     const m = new Set(cases.map((c) => c.mechanic))
-    expect(m).toEqual(new Set(['leftovers', 'lineup', 'elimination', 'anagram']))
+    expect(m).toEqual(
+      new Set([
+        'leftovers', 'lineup', 'elimination', 'anagram',
+        'cryptogram', 'deduction', 'interrogation', 'timeline',
+      ]),
+    )
   })
 })
 
 describe('per-case validity', () => {
   it.each(cases)('case #%i "$title" is well-formed', (c) => {
-    // grid shape + letters
-    expect(c.grid).toHaveLength(c.rows)
-    for (const row of c.grid) {
-      expect(row).toHaveLength(c.cols)
-      expect(row).toMatch(/^[A-Z]+$/)
-    }
-
-    // words valid, unique, fit grid
-    expect(new Set(c.words).size).toBe(c.words.length)
-    for (const w of c.words) {
-      expect(w).toMatch(/^[A-Z]{3,}$/)
-      expect(w.length).toBeLessThanOrEqual(Math.max(c.rows, c.cols))
-      expect(wordInGrid(c, w)).toBe(true)
-    }
-
-    // placements cover exactly the bank words and match grid letters
-    const covered = new Set<number>()
-    for (const p of c.placements) {
-      expect(c.words).toContain(p.word)
-      const { dr, dc } = DIRS[p.d]
-      for (let i = 0; i < p.word.length; i++) {
-        const r = p.r + dr * i
-        const cc = p.c + dc * i
-        expect(c.grid[r][cc]).toBe(p.word[i])
-        covered.add(r * c.cols + cc)
-      }
-    }
-
-    // leftover message: fill letters land in declared cells, disjoint from words
+    const isWS = WORD_SEARCH_MECHANICS.includes(c.mechanic)
     const p = c.payload
-    const fill = p.kind === 'anagram' ? p.tiles : p.message
-    expect(p.messageCells).toHaveLength(fill.length)
-    p.messageCells.forEach((cell, i) => {
-      expect(covered.has(cell)).toBe(false)
-      const r = Math.floor(cell / c.cols)
-      const cc = cell % c.cols
-      expect(c.grid[r][cc]).toBe(fill[i])
-    })
+
+    if (isWS) {
+      // grid shape + letters
+      expect(c.grid).toHaveLength(c.rows)
+      for (const row of c.grid) {
+        expect(row).toHaveLength(c.cols)
+        expect(row).toMatch(/^[A-Z]+$/)
+      }
+
+      // words valid, unique, fit grid
+      expect(new Set(c.words).size).toBe(c.words.length)
+      for (const w of c.words) {
+        expect(w).toMatch(/^[A-Z]{3,}$/)
+        expect(w.length).toBeLessThanOrEqual(Math.max(c.rows, c.cols))
+        expect(wordInGrid(c, w)).toBe(true)
+      }
+
+      // placements cover exactly the bank words and match grid letters
+      const covered = new Set<number>()
+      for (const pl of c.placements) {
+        expect(c.words).toContain(pl.word)
+        const { dr, dc } = DIRS[pl.d]
+        for (let i = 0; i < pl.word.length; i++) {
+          const r = pl.r + dr * i
+          const cc = pl.c + dc * i
+          expect(c.grid[r][cc]).toBe(pl.word[i])
+          covered.add(r * c.cols + cc)
+        }
+      }
+
+      // leftover message: fill letters land in declared cells, disjoint from words
+      if (
+        p.kind === 'leftovers' || p.kind === 'lineup' ||
+        p.kind === 'elimination' || p.kind === 'anagram'
+      ) {
+        const fill = p.kind === 'anagram' ? p.tiles : p.message
+        expect(p.messageCells).toHaveLength(fill.length)
+        p.messageCells.forEach((cell, i) => {
+          expect(covered.has(cell)).toBe(false)
+          const r = Math.floor(cell / c.cols)
+          const cc = cell % c.cols
+          expect(c.grid[r][cc]).toBe(fill[i])
+        })
+      }
+    } else {
+      expect(c.grid).toHaveLength(0)
+      expect(c.words).toHaveLength(0)
+      expect(c.placements).toHaveLength(0)
+    }
 
     // mechanic-specific invariants
     if (p.kind === 'leftovers') {
@@ -125,6 +150,72 @@ describe('per-case validity', () => {
       const sort = (s: string) => s.split('').sort().join('')
       expect(sort(p.tiles)).toBe(sort(p.phrase.replace(/ /g, '')))
       expect(p.tiles).not.toBe(p.phrase.replace(/ /g, ''))
+    } else if (p.kind === 'cryptogram') {
+      // cipher round-trips through the declared mapping
+      const decoded = p.cipher
+        .split('')
+        .map((ch) => (/[A-Z]/.test(ch) ? p.mapping[ch] : ch))
+        .join('')
+      expect(decoded).toBe(p.phrase)
+      // every cipher letter mapped, no letter maps to itself, givens are correct
+      const cipherLetters = new Set(p.cipher.replace(/[^A-Z]/g, '').split(''))
+      for (const cl of cipherLetters) {
+        expect(p.mapping[cl]).toMatch(/^[A-Z]$/)
+        expect(p.mapping[cl]).not.toBe(cl)
+      }
+      for (const [k, v] of Object.entries(p.givens)) {
+        expect(p.mapping[k]).toBe(v)
+        expect(cipherLetters.has(k)).toBe(true)
+      }
+      expect(Object.keys(p.givens).length).toBeGreaterThan(0)
+    } else if (p.kind === 'deduction') {
+      expect(p.suspects).toHaveLength(4)
+      expect(p.weapons).toHaveLength(4)
+      expect(p.locations).toHaveLength(4)
+      expect(new Set(p.suspects).size).toBe(4)
+      expect(new Set(p.weapons).size).toBe(4)
+      expect(new Set(p.locations).size).toBe(4)
+      expect(p.suspects).toContain(c.killer)
+      expect(p.weapons).toContain(c.weapon)
+      expect(p.locations).toContain(c.location)
+      // exactly one world satisfies the clues, and it's the canonical one
+      const { count, world } = countWorlds(p.clues, p.suspects, p.weapons, p.locations)
+      expect(count).toBe(1)
+      expect(world).not.toBeNull()
+      expect(world!.guilty).toBe(c.killer)
+      expect(world!.weaponOf.get(c.killer)).toBe(c.weapon)
+      expect(world!.locOf.get(c.killer)).toBe(c.location)
+      // assignment table agrees with the world
+      for (const a of p.assignments) {
+        expect(world!.weaponOf.get(a.suspect)).toBe(a.weapon)
+        expect(world!.locOf.get(a.suspect)).toBe(a.location)
+        expect(a.guilty).toBe(a.suspect === c.killer)
+      }
+    } else if (p.kind === 'interrogation') {
+      expect(p.suspects).toHaveLength(4)
+      expect(p.suspects.map((s) => s.speaker)).toContain(c.killer)
+      // pairings are a perfect matching over the suspects
+      const names = p.suspects.map((s) => s.speaker)
+      const paired = p.pairings.flat()
+      expect(p.pairings).toHaveLength(2)
+      for (const n of names) expect(paired.filter((x) => x === n)).toHaveLength(1)
+      // the killer is the unique speaker whose statement is false,
+      // and the unique consistent suspect
+      const liars = p.suspects.filter(
+        (s) => !statementHolds(s, p.pairings, c.killer),
+      )
+      expect(liars).toHaveLength(1)
+      expect(liars[0].speaker).toBe(c.killer)
+      const consistent = names.filter((n) =>
+        interrogationConsistent(p.suspects, p.pairings, n),
+      )
+      expect(consistent).toEqual([c.killer])
+    } else if (p.kind === 'timeline') {
+      expect(p.events.length).toBeGreaterThanOrEqual(5)
+      expect(new Set(p.events).size).toBe(p.events.length)
+      expect(new Set(p.order).size).toBe(p.events.length)
+      // clues admit exactly one order — the canonical one
+      expect(countOrders(p.clues, p.events.length)).toBe(1)
     }
   })
 })

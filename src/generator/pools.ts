@@ -132,6 +132,52 @@ export const CLUE_TEXT: Record<TraitDim, Record<string, { msg: string; readable:
   },
 }
 
+/** Cipher-case plaintext phrases. {WEAPON}/{LOCATION}/{KILLER}/{VICTIM}/{MOTIVE} fill with case atoms (squashed, A-Z + spaces). */
+export const CIPHER_PHRASES = [
+  'I DID IT FOR THE MONEY',
+  'MEET ME AT THE {LOCATION} AT MIDNIGHT',
+  'THE {WEAPON} IS UNDER THE PIER',
+  'BURN THIS LETTER AT ONCE',
+  'SHE KNEW TOO MUCH',
+  'THE WILL IS IN THE DESK DRAWER',
+  'NO ONE WILL EVER FIND HER',
+  'IT WAS ALWAYS ABOUT THE {MOTIVE}',
+  'I SAW EVERYTHING FROM THE ATTIC',
+  'THE SAFE CODE IS HER BIRTHDAY',
+  'ASK THE MAID WHAT SHE SAW',
+  'THE MONEY IS BURIED AT THE {LOCATION}',
+  'FOLLOW THE MONEY',
+  'CHECK THE LEDGER',
+  'IT WAS NEVER AN ACCIDENT',
+  'THE {WEAPON} TELLS THE TRUTH',
+  'DIG UP THE {LOCATION}',
+  'I REGRET NOTHING',
+  'MIDNIGHT AT THE {LOCATION}',
+  'THE {WEAPON} WAS MINE ALL ALONG',
+  'HE NEVER SHOULD HAVE OPENED THAT LETTER',
+  'FORGIVE ME FOR WHAT I DID AT THE {LOCATION}',
+]
+
+/** Timeline-case events (lowercase clauses). */
+export const TIMELINE_EVENTS = [
+  'the lights went out',
+  'a scream was heard',
+  'the hall clock stopped',
+  'a car sped away',
+  'the telephone rang',
+  'the front door slammed',
+  'the dog started barking',
+  'the alarm was tripped',
+  'smoke filled the hall',
+  'the piano stopped playing',
+  'a shot rang out',
+  'the window shattered',
+  'the gate creaked open',
+  'a candle blew out',
+  'the record skipped',
+  'someone knocked twice',
+]
+
 /** Evidence-note templates for elimination. {item} = cleared name. */
 export const ELIM_NOTES = {
   suspect: [

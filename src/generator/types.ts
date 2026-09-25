@@ -1,4 +1,15 @@
-export type Mechanic = 'leftovers' | 'lineup' | 'elimination' | 'anagram'
+export type Mechanic =
+  | 'leftovers'
+  | 'lineup'
+  | 'elimination'
+  | 'anagram'
+  | 'cryptogram'
+  | 'deduction'
+  | 'interrogation'
+  | 'timeline'
+
+/** Mechanics that play out on the word-search grid. */
+export const WORD_SEARCH_MECHANICS: Mechanic[] = ['leftovers', 'lineup', 'elimination', 'anagram']
 
 export interface Placement {
   word: string
@@ -69,7 +80,81 @@ export interface AnagramPayload {
   messageCells: number[]
 }
 
-export type Payload = LeftoverPayload | LineupPayload | EliminationPayload | AnagramPayload
+export interface CryptogramPayload {
+  kind: 'cryptogram'
+  /** plaintext note (uppercase, spaces) */
+  phrase: string
+  /** encoded text — same length, letters substituted, spaces kept */
+  cipher: string
+  /** cipher letter -> plaintext letter revealed to the player */
+  givens: Record<string, string>
+  /** full cipher -> plain mapping (for validation) */
+  mapping: Record<string, string>
+}
+
+export interface DeductionClue {
+  text: string
+  kind:
+    | 'has-weapon' | 'not-weapon'
+    | 'at-location' | 'not-location'
+    | 'killer-weapon' | 'killer-not-weapon'
+    | 'killer-location' | 'killer-not-location'
+    | 'loc-weapon' | 'loc-not-weapon'
+    | 'innocent'
+  a: string
+  b?: string
+}
+
+export interface DeductionPayload {
+  kind: 'deduction'
+  suspects: string[]
+  weapons: string[]
+  locations: string[]
+  clues: DeductionClue[]
+  /** full world (bijections + guilty flag) — the truth table */
+  assignments: Array<{ suspect: string; weapon: string; location: string; guilty: boolean }>
+}
+
+export interface Statement {
+  speaker: string
+  text: string
+  kind: 'innocent-self' | 'guilty-other' | 'innocent-other' | 'with-other' | 'other-alone'
+  /** subject of the statement for *-other kinds */
+  x?: string
+}
+
+export interface InterrogationPayload {
+  kind: 'interrogation'
+  suspects: Statement[]
+  /** alibi pairings (objective fact used by with/alone statements) */
+  pairings: [string, string][]
+}
+
+export interface TimeClue {
+  text: string
+  kind: 'before' | 'after' | 'first' | 'last' | 'immediately-after' | 'between'
+  /** event indices this clue constrains */
+  ids: number[]
+}
+
+export interface TimelinePayload {
+  kind: 'timeline'
+  /** event labels in display order (shuffled) */
+  events: string[]
+  /** chronological order as indices into `events` — order[0] = first event */
+  order: number[]
+  clues: TimeClue[]
+}
+
+export type Payload =
+  | LeftoverPayload
+  | LineupPayload
+  | EliminationPayload
+  | AnagramPayload
+  | CryptogramPayload
+  | DeductionPayload
+  | InterrogationPayload
+  | TimelinePayload
 
 export interface CaseFile {
   id: number
@@ -77,9 +162,10 @@ export interface CaseFile {
   title: string
   themeId: string
   mechanic: Mechanic
+  /** grid dims — 0 for non-word-search cases */
   rows: number
   cols: number
-  /** row strings of uppercase letters */
+  /** row strings of uppercase letters — empty for non-word-search cases */
   grid: string[]
   words: string[]
   victim: string

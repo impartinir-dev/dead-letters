@@ -967,6 +967,265 @@ body {
   color: var(--ink);
 }
 
+/* ------------------------------ new modes ------------------------------ */
+
+.mode {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  flex: 1;
+}
+
+.mode-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 6px;
+}
+
+.btn.wide {
+  width: 100%;
+}
+
+.center-note {
+  text-align: center;
+  margin: 0;
+}
+
+/* cipher */
+
+.cipher-text {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 14px;
+  justify-content: center;
+  padding: 12px 4px;
+  border: 2px solid var(--ink);
+  background: var(--paper2);
+  box-shadow: 3px 3px 0 var(--shadow);
+}
+
+.cipher-word {
+  display: inline-flex;
+  gap: 3px;
+}
+
+.cipher-cell {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: none;
+  background: transparent;
+  padding: 2px 1px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  font-family: var(--mono);
+}
+
+.cipher-cell.sel {
+  border-bottom-color: var(--red);
+}
+
+.cipher-guess {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--red);
+  min-height: 1.2em;
+}
+
+.cipher-cell.given .cipher-guess {
+  color: var(--teal);
+}
+
+.cipher-cell.bad .cipher-guess {
+  color: var(--red-bright);
+  animation: shake 0.35s;
+}
+
+.cipher-char {
+  font-size: 0.7rem;
+  color: var(--ink-soft);
+}
+
+.alpha-tray {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  justify-content: center;
+}
+
+.alpha-key {
+  width: 34px;
+  height: 38px;
+  font-family: var(--mono);
+  font-weight: 700;
+  font-size: 0.95rem;
+  border: 1.5px solid var(--ink);
+  background: var(--paper);
+  color: var(--ink);
+  cursor: pointer;
+  padding: 0;
+}
+
+.alpha-key:disabled {
+  opacity: 0.25;
+}
+
+/* deduction + interrogation */
+
+.ded-x {
+  float: right;
+  font-family: var(--mono);
+  font-size: 0.6rem;
+  color: var(--ink-soft);
+  padding: 0 0 2px 6px;
+}
+
+.elim-item.ded .ded-x {
+  opacity: 0.6;
+}
+
+.alibis {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  color: var(--ink-soft);
+  text-align: center;
+  margin: 0;
+}
+
+.stmts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.stmt-card {
+  text-align: left;
+  border: 1.5px solid var(--line);
+  background: var(--paper2);
+  padding: 10px 12px;
+  cursor: pointer;
+  font-family: var(--serif);
+  color: var(--ink);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 2px 2px 0 var(--shadow);
+}
+
+.stmt-card.picked {
+  border-color: var(--red);
+  box-shadow: 0 0 0 1.5px var(--red) inset;
+}
+
+.stmt-card.cleared {
+  opacity: 0.45;
+}
+
+.stmt-card.wrong {
+  border-color: var(--red-bright);
+  animation: shake 0.4s;
+}
+
+.stmt-card.right {
+  border-color: var(--teal);
+  background: rgba(31, 90, 90, 0.1);
+}
+
+.stmt-name {
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.15em;
+  font-weight: 700;
+  display: flex;
+  justify-content: space-between;
+}
+
+.cleared-tag {
+  font-style: normal;
+  color: var(--teal);
+  border: 1px solid var(--teal);
+  padding: 0 4px;
+  font-size: 0.58rem;
+  letter-spacing: 0.15em;
+}
+
+.stmt-text {
+  font-style: italic;
+  font-size: 0.95rem;
+}
+
+/* timeline */
+
+.timeline-slots {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.t-slot {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1.5px dashed var(--ink-soft);
+  background: var(--paper2);
+  padding: 9px 10px;
+  font-family: var(--serif);
+  font-size: 0.85rem;
+  color: var(--ink);
+  cursor: pointer;
+  text-align: left;
+  min-height: 40px;
+}
+
+.t-slot.filled {
+  border-style: solid;
+  border-color: var(--ink);
+}
+
+.t-slot.pinned {
+  border-color: var(--teal);
+  background: rgba(31, 90, 90, 0.08);
+}
+
+.t-num {
+  font-family: var(--mono);
+  font-weight: 700;
+  color: var(--red);
+  min-width: 18px;
+}
+
+.t-slot.pinned .t-num {
+  color: var(--teal);
+}
+
+.t-label {
+  text-transform: capitalize;
+}
+
+.t-pool {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.t-event {
+  border: 1.5px solid var(--line);
+  background: var(--paper3);
+  font-family: var(--mono);
+  font-size: 0.72rem;
+  padding: 9px 10px;
+  cursor: pointer;
+  color: var(--ink);
+  text-align: left;
+  letter-spacing: 0.02em;
+}
+
+.t-event:disabled {
+  opacity: 0.3;
+}
+
 /* -------------------------------- misc --------------------------------- */
 
 .loading {

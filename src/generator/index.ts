@@ -3,22 +3,37 @@ import { mulberry32, seedFor, pick, pickN, int, shuffle } from './rng'
 import { THEMES, FLAVOR_TEMPLATES, TITLE_TEMPLATES, type Theme } from './themes'
 import { DIRS, placeWords, leftoverCells, finalizeGrid, canPlace, fits, put, type Grid } from './grid'
 import { makeAtoms, buildPayload, type Atoms } from './mechanics'
+import { buildMode } from './modes'
 import { CRIME_FILLER } from './pools'
-import type { CaseFile, CaseIndexEntry, Mechanic } from './types'
+import { WORD_SEARCH_MECHANICS, type CaseFile, type CaseIndexEntry, type Mechanic } from './types'
 
-/* Per-volume difficulty + mechanic patterns (indexed by (id-1) % 10).
- * A=leftovers B=lineup C=elimination D=anagram
- * Totals across 150: A=65, B=30, C=35, D=20 */
+/* Per-volume mechanic patterns (indexed by (id-1) % 10).
+ * A=leftovers B=lineup C=elimination D=anagram  (word-search family)
+ * E=cryptogram F=deduction G=interrogation H=timeline
+ * Totals across 150: A30 B15 C20 D15 E25 F15 G15 H15 — ~53% word search. */
 const PATTERNS: Record<number, string> = {
-  1: 'AABAAAABAA',
-  2: 'ACBACBACAD',
-  3: 'DCBCDABCDC',
+  1: 'AAEBAGAHEG',
+  2: 'CEBFCHAECD',
+  3: 'DFGCAHBFED',
 }
 const MECH_MAP: Record<string, Mechanic> = {
   A: 'leftovers',
   B: 'lineup',
   C: 'elimination',
   D: 'anagram',
+  E: 'cryptogram',
+  F: 'deduction',
+  G: 'interrogation',
+  H: 'timeline',
+}
+
+/** Extra per-mechanic title options for non-word-search cases. */
+const MECH_TITLES: Partial<Record<Mechanic, string[]>> = {
+  cryptogram: ['The Cipher', 'Coded Words', 'A Message in Code', 'The Zodiac Letter'],
+  deduction: ['Process of Elimination', 'Four Suspects', 'The Logic of Murder'],
+  interrogation: ['One of Them Lies', 'The Interrogation', 'Four Statements'],
+  timeline: ['The Timeline', 'Order of Events', 'That Night, In Order'],
+  anagram: ['The Confession', 'Last Words'],
 }
 
 const DIRS_BY_VOL: Record<number, string[]> = {
@@ -42,8 +57,8 @@ function wordCount(rng: Rng, vol: number): number {
   return vol === 1 ? int(rng, 10, 12) : vol === 2 ? int(rng, 12, 15) : int(rng, 15, 18)
 }
 
-/** Leftover budget per mechanic — decoy words consume cells beyond this. */
-const LEFTOVER_TARGET: Record<Mechanic, number> = {
+/** Leftover budget per word-search mechanic — decoy words consume cells beyond this. */
+const LEFTOVER_TARGET: Record<string, number> = {
   leftovers: 64,
   lineup: 40,
   elimination: 40,
@@ -98,33 +113,46 @@ export function generateCase(id: number, salt: number, recentThemes: Set<string>
     const theme: Theme = pick(rng, available.length ? available : THEMES)
     const atoms = makeAtoms(rng)
 
-    const wc = wordCount(rng, vol)
-    const themeWords = theme.words.filter((w) => w.length <= size)
-    const words = pickN(rng, themeWords, wc)
-    const filler = shuffle(rng, CRIME_FILLER.filter((w) => w.length <= size))
-    for (const w of filler) {
-      if (words.length >= wc) break
-      if (!words.includes(w)) words.push(w)
+    const isWS = WORD_SEARCH_MECHANICS.includes(mechanic)
+    let grid: string[] = []
+    let words: string[] = []
+    let placements: CaseFile['placements'] = []
+    let payload: CaseFile['payload'] | null = null
+
+    if (isWS) {
+      const wc = wordCount(rng, vol)
+      const themeWords = theme.words.filter((w) => w.length <= size)
+      words = pickN(rng, themeWords, wc)
+      const filler = shuffle(rng, CRIME_FILLER.filter((w) => w.length <= size))
+      for (const w of filler) {
+        if (words.length >= wc) break
+        if (!words.includes(w)) words.push(w)
+      }
+
+      const placed = placeWords(rng, words, size, size, dirs)
+      if (!placed) continue
+
+      // decoy words (red herrings hidden but not in the bank)
+      const decoyPool = [
+        ...theme.words.filter((w) => !words.includes(w) && w.length <= size),
+        ...CRIME_FILLER.filter((w) => !words.includes(w) && w.length <= size),
+      ]
+      placeDecoys(rng, placed.grid, size, decoyPool, LEFTOVER_TARGET[mechanic])
+
+      const cells = leftoverCells(placed.grid, size)
+      const built = buildPayload(mechanic, rng, cells.length, cells, atoms, words)
+      if (!built || built.fill.length !== cells.length) continue
+      grid = finalizeGrid(placed.grid, size, cells, built.fill)
+      placements = placed.placements
+      payload = built.payload
+    } else {
+      payload = buildMode(mechanic, rng, atoms, vol)
+      if (!payload) continue
     }
-
-    const placed = placeWords(rng, words, size, size, dirs)
-    if (!placed) continue
-
-    // decoy words (red herrings hidden but not in the bank)
-    const decoyPool = [
-      ...theme.words.filter((w) => !words.includes(w) && w.length <= size),
-      ...CRIME_FILLER.filter((w) => !words.includes(w) && w.length <= size),
-    ]
-    placeDecoys(rng, placed.grid, size, decoyPool, LEFTOVER_TARGET[mechanic])
-
-    const cells = leftoverCells(placed.grid, size)
-    const built = buildPayload(mechanic, rng, cells.length, cells, atoms, words)
-    if (!built || built.fill.length !== cells.length) continue
-
-    const grid = finalizeGrid(placed.grid, size, cells, built.fill)
 
     const titlePool = [
       ...theme.titles,
+      ...(MECH_TITLES[mechanic] ?? []),
       ...TITLE_TEMPLATES.map((t) =>
         t
           .replaceAll('{victim}', atoms.victim)
@@ -140,8 +168,8 @@ export function generateCase(id: number, salt: number, recentThemes: Set<string>
       title: pick(rng, titlePool),
       themeId: theme.id,
       mechanic,
-      rows: size,
-      cols: size,
+      rows: isWS ? size : 0,
+      cols: isWS ? size : 0,
       grid,
       words,
       victim: atoms.victim,
@@ -150,9 +178,11 @@ export function generateCase(id: number, salt: number, recentThemes: Set<string>
       location: atoms.location,
       motive: atoms.motive,
       flavor: fillFlavor(pick(rng, FLAVOR_TEMPLATES), atoms, theme.place),
-      parSeconds: Math.round(25 + words.length * 6 + size * size * 0.35),
-      placements: placed.placements,
-      payload: built.payload,
+      parSeconds: isWS
+        ? Math.round(25 + words.length * 6 + size * size * 0.35)
+        : int(rng, 60, 110),
+      placements,
+      payload,
     }
   }
   return null

@@ -275,5 +275,7 @@ export function buildPayload(
       const p = buildAnagram(rng, L, messageCells, a)
       return p && { payload: p, fill: p.tiles }
     }
+    default:
+      return null
   }
 }

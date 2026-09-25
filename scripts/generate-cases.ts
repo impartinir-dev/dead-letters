@@ -18,8 +18,8 @@ for (const vol of [1, 2, 3]) {
 }
 writeFileSync(join(outDir, 'index.json'), JSON.stringify(index satisfies CaseIndexEntry[]))
 
-const mech = { leftovers: 0, lineup: 0, elimination: 0, anagram: 0 }
-for (const c of cases) mech[c.mechanic]++
+const mech: Record<string, number> = {}
+for (const c of cases) mech[c.mechanic] = (mech[c.mechanic] ?? 0) + 1
 const kb = (cases.length ? JSON.stringify(cases).length / 1024 : 0).toFixed(0)
 console.log(`generated ${cases.length} cases (${kb} KB) → src/data/`)
 console.log('mechanics:', mech)
