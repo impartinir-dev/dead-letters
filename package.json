@@ -8,6 +8,7 @@
     "dev": "vite",
     "generate": "tsx scripts/generate-cases.ts",
     "icons": "tsx scripts/make-icons.ts",
+    "og": "tsx scripts/make-share-image.ts",
     "prebuild": "npm run generate",
     "build": "tsc -b && vite build",
     "test": "vitest run",
