@@ -17,7 +17,7 @@ export const MECHANIC_LABEL: Record<string, string> = {
 
 export const MECHANIC_HELP: Record<string, string> = {
   leftovers:
-    'Find every word in the bank. The letters left over in the grid — read top to bottom — spell out the solution. Fill in the case-file blanks.',
+    'Find every word in the bank. The letters left over in the grid — read top to bottom — point to one of the suspects. Accuse them, and fill in any other case-file blanks.',
   lineup:
     'Find every word. The leftover letters spell a clue about the killer. Pick the matching suspect from the lineup.',
   elimination:
@@ -25,7 +25,7 @@ export const MECHANIC_HELP: Record<string, string> = {
   anagram:
     'Find every word. The leftover letters form a scrambled confession — rearrange the tiles to reveal it.',
   cryptogram:
-    'An encoded note. Every cipher letter always stands for the same real letter — tap cells, assign letters, decode the whole message.',
+    'An encoded note. Every cipher letter always stands for the same real letter — tap cells, assign letters, decode the whole message. Then accuse the suspect it points to.',
   deduction:
     'Pure logic. Work the evidence cards to pin down exactly one killer, one weapon, and one location — then make the accusation.',
   interrogation:

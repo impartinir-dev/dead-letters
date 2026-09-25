@@ -11,6 +11,7 @@ import DeductionMode from './modes/DeductionMode'
 import InterrogationMode from './modes/InterrogationMode'
 import TimelineMode from './modes/TimelineMode'
 import SolvedOverlay from './SolvedOverlay'
+import Suspects from './Suspects'
 
 export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) => void }) {
   const [c, setCase] = useState<CaseFile | null>(null)
@@ -110,6 +111,7 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
       </header>
 
       <p className="flavor">{c.flavor}</p>
+      <Suspects suspects={c.suspects} />
       <p className="mech-tag">{MECHANIC_LABEL[c.mechanic]}</p>
 
       {isWS && <WordSearchMode {...modeProps} />}

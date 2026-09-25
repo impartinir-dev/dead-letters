@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import type { CryptogramPayload } from '../../generator/types'
 import type { ModeProps } from './types'
+import { SuspectPicker } from '../Suspects'
 
 const ALPHABET = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('')
 
@@ -15,6 +16,10 @@ export default function CryptogramMode({ c, hintToken, setStatus, notify, onSolv
   const [wrongSet, setWrongSet] = useState<Set<string>>(new Set())
   const lastHint = useRef(0)
   const solvedRef = useRef(false)
+  // once decoded, the note points at a suspect — the player still has to accuse
+  const [decoded, setDecoded] = useState(false)
+  const [picked, setPicked] = useState<string | null>(null)
+  const [accused, setAccused] = useState<string | null>(null)
 
   const usedLetters = useMemo(() => new Set(Object.values(guesses)), [guesses])
   const givensSet = useMemo(() => new Set(Object.keys(p.givens)), [p])
@@ -49,7 +54,8 @@ export default function CryptogramMode({ c, hintToken, setStatus, notify, onSolv
     const wrong = new Set(cipherLetters.filter((cl) => guesses[cl] !== p.mapping[cl]))
     if (wrong.size === 0) {
       solvedRef.current = true
-      onSolved()
+      setDecoded(true)
+      notify('Decoded. Now — who does the note point to?')
     } else {
       setWrongSet(wrong)
       onWrong()
@@ -86,6 +92,29 @@ export default function CryptogramMode({ c, hintToken, setStatus, notify, onSolv
     const next = cipherLetters.find((cl) => cl !== sel && !guesses[cl] && !givensSet.has(cl))
     if (next) setSel(next)
   }
+
+  const accuse = () => {
+    if (!picked) return
+    setAccused(picked)
+    if (picked === c.killer) onSolved()
+    else onWrong()
+  }
+
+  if (decoded)
+    return (
+      <div className="mode cipher-mode solve-lineup">
+        <p className="clue">“{p.phrase}”</p>
+        <SuspectPicker
+          suspects={c.suspects}
+          picked={picked}
+          onPick={setPicked}
+          mark={accused ? { name: accused, right: accused === c.killer } : null}
+        />
+        <button className="btn btn-primary" disabled={!picked} onClick={accuse}>
+          Accuse
+        </button>
+      </div>
+    )
 
   return (
     <div className="mode cipher-mode">

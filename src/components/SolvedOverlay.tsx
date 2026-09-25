@@ -19,7 +19,8 @@ export default function SolvedOverlay({ c, seconds, hints, wrong, nav }: Props) 
         <div className="stamp">CASE CLOSED</div>
         <h2>{c.title}</h2>
         <p className="resolution">
-          {c.killer} did it — {c.weapon.toLowerCase()}, in the {c.location.toLowerCase()}.
+          {c.killer}, the {c.suspects.find((s) => s.name === c.killer)?.role}, did it — with the{' '}
+          {c.weapon.toLowerCase()}, in the {c.location.toLowerCase()}.
         </p>
         <dl className="stats">
           <div>

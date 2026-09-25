@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import type { CaseFile, EliminationPayload, LineupPayload } from '../generator/types'
 import { TRAIT_LABEL } from '../generator/pools'
+import { SuspectPicker } from './Suspects'
 
 const squash = (s: string) => s.toUpperCase().replace(/[^A-Z]/g, '')
 
@@ -14,36 +15,24 @@ interface PanelProps {
 
 /* ------------------------------ leftovers ------------------------------ */
 
-const BLANK_LABEL: Record<string, string> = { killer: 'THE KILLER', weapon: 'THE WEAPON', location: 'THE LOCATION' }
-
-function killerMatches(input: string, name: string): boolean {
-  const norm = squash(input)
-  if (!norm) return false
-  const parts = name.split(' ')
-  const first = squash(parts[0])
-  const last = squash(parts[parts.length - 1])
-  return norm === squash(name) || norm === first || norm === last
-}
+const BLANK_LABEL: Record<string, string> = { weapon: 'THE WEAPON', location: 'THE LOCATION' }
 
 function LeftoversPanel({ c, allFound, onCorrect, onWrong }: PanelProps) {
   const p = c.payload as Extract<CaseFile['payload'], { kind: 'leftovers' }>
   const [vals, setVals] = useState<Record<string, string>>({})
+  const [accused, setAccused] = useState<string | null>(null)
   const [wrong, setWrong] = useState<Set<string>>(new Set())
+  const typed = p.blanks.filter((b) => b !== 'killer')
 
   if (!allFound)
     return <p className="sheet-note">Find every word in the bank — the leftover letters will spell out the truth.</p>
 
   const submit = () => {
     const bad = new Set<string>()
-    for (const b of p.blanks) {
-      const v = vals[b] ?? ''
-      const ok =
-        b === 'killer'
-          ? killerMatches(v, c.killer)
-          : b === 'weapon'
-            ? squash(v) === squash(c.weapon)
-            : squash(v) === squash(c.location)
-      if (!ok) bad.add(b)
+    if (accused !== c.killer) bad.add('killer')
+    for (const b of typed) {
+      const v = squash(vals[b] ?? '')
+      if (v !== squash(b === 'weapon' ? c.weapon : c.location)) bad.add(b)
     }
     if (bad.size) {
       setWrong(bad)
@@ -53,8 +42,21 @@ function LeftoversPanel({ c, allFound, onCorrect, onWrong }: PanelProps) {
 
   return (
     <div className="solve-leftovers">
-      <p className="sheet-note">The leftover letters spell it out. Fill in the case file.</p>
-      {p.blanks.map((b) => (
+      <p className="sheet-note">The leftover letters point to one of the suspects. Who did it?</p>
+      <SuspectPicker
+        suspects={c.suspects}
+        picked={accused}
+        onPick={(n) => {
+          setAccused(n)
+          setWrong((w) => {
+            const next = new Set(w)
+            next.delete('killer')
+            return next
+          })
+        }}
+        mark={wrong.has('killer') && accused ? { name: accused, right: false } : null}
+      />
+      {typed.map((b) => (
         <label key={b} className={`blank-row ${wrong.has(b) ? 'bad' : ''}`}>
           <span>{BLANK_LABEL[b]}</span>
           <input
@@ -75,7 +77,7 @@ function LeftoversPanel({ c, allFound, onCorrect, onWrong }: PanelProps) {
           />
         </label>
       ))}
-      <button className="btn btn-primary" onClick={submit}>
+      <button className="btn btn-primary" disabled={!accused} onClick={submit}>
         Close the case
       </button>
     </div>
@@ -114,6 +116,7 @@ function LineupPanel({ c, allFound, onCorrect, onWrong }: PanelProps) {
             onClick={() => setPicked(i)}
           >
             <span className="suspect-name">{s.name}</span>
+            <span className="suspect-hook">{c.suspects.find((x) => x.name === s.name)?.hook}</span>
             <span className="suspect-traits">
               {(Object.keys(s.traits) as Array<keyof typeof s.traits>).map((d) => (
                 <em key={d}>{TRAIT_LABEL[d][s.traits[d]]}</em>
