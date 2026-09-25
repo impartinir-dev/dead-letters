@@ -2,7 +2,7 @@ import type { Rng } from './rng'
 import { pick, pickN, shuffle, chance } from './rng'
 import { fitMessage } from './message'
 import {
-  FIRST_NAMES, SURNAMES, WEAPONS, LOCATIONS, MOTIVES,
+  FIRST_NAMES, SURNAMES, MOTIVES,
   TRAIT_VALUES, CLUE_TEXT, ELIM_NOTES, ELIM_MESSAGES,
   CONFESSIONS, CONFESSION_PADS,
   type TraitDim,
@@ -11,6 +11,7 @@ import type {
   Mechanic, Payload, LeftoverPayload, LineupPayload,
   EliminationPayload, AnagramPayload, Suspect, ElimItem,
 } from './types'
+import type { Theme } from './themes'
 
 export interface Atoms {
   victim: string
@@ -24,14 +25,15 @@ export const squash = (s: string) => s.toUpperCase().replace(/[^A-Z]/g, '')
 export const titleCase = (s: string) =>
   s.toLowerCase().replace(/\b[a-z]/g, (ch) => ch.toUpperCase())
 
-export function makeAtoms(rng: Rng): Atoms {
+/** Weapon and location are drawn only from the theme's own pools. */
+export function makeAtoms(rng: Rng, theme: Theme): Atoms {
   const firsts = pickN(rng, FIRST_NAMES, 2)
   const lasts = pickN(rng, SURNAMES, 2)
   return {
     victim: titleCase(`${firsts[0]} ${lasts[0]}`),
     killer: titleCase(`${firsts[1]} ${lasts[1]}`),
-    weapon: titleCase(pick(rng, WEAPONS)),
-    location: titleCase(pick(rng, LOCATIONS)),
+    weapon: pick(rng, theme.weapons),
+    location: pick(rng, theme.rooms),
     motive: titleCase(pick(rng, MOTIVES)),
   }
 }
@@ -176,7 +178,7 @@ function elimItems(rng: Rng, answer: string, pool: string[], noteKind: keyof typ
 }
 
 function buildElimination(
-  rng: Rng, L: number, messageCells: number[], a: Atoms, words: string[],
+  rng: Rng, L: number, messageCells: number[], a: Atoms, words: string[], theme: Theme,
 ): EliminationPayload | null {
   if (words.length < 9) return null
   const message = fitMessage(rng, ELIM_MESSAGES, L)
@@ -186,8 +188,8 @@ function buildElimination(
     .map((f) => titleCase(`${f} ${pick(rng, SURNAMES)}`))
     .filter((n) => squash(n) !== squash(a.victim))
   const suspects = elimItems(rng, a.killer, suspectPool, 'suspect')
-  const weapons = elimItems(rng, a.weapon, WEAPONS, 'weapon')
-  const locations = elimItems(rng, a.location, LOCATIONS, 'location')
+  const weapons = elimItems(rng, a.weapon, theme.weapons, 'weapon')
+  const locations = elimItems(rng, a.location, theme.rooms, 'location')
 
   const wrong: Array<{ kind: 'suspect' | 'weapon' | 'location'; item: string; note: string }> = [
     ...suspects.filter((i) => i.cleared).map((i) => ({ kind: 'suspect' as const, item: i.name, note: i.note })),
@@ -257,6 +259,7 @@ export interface BuiltPayload {
 
 export function buildPayload(
   mechanic: Mechanic, rng: Rng, L: number, messageCells: number[], a: Atoms, words: string[],
+  theme: Theme,
 ): BuiltPayload | null {
   switch (mechanic) {
     case 'leftovers': {
@@ -268,7 +271,7 @@ export function buildPayload(
       return p && { payload: p, fill: p.message }
     }
     case 'elimination': {
-      const p = buildElimination(rng, L, messageCells, a, words)
+      const p = buildElimination(rng, L, messageCells, a, words, theme)
       return p && { payload: p, fill: p.message }
     }
     case 'anagram': {

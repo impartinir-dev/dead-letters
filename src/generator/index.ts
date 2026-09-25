@@ -1,6 +1,8 @@
 import type { Rng } from './rng'
 import { mulberry32, seedFor, pick, pickN, int, shuffle } from './rng'
-import { THEMES, FLAVOR_TEMPLATES, TITLE_TEMPLATES, type Theme } from './themes'
+import {
+  THEMES, FLAVOR_TEMPLATES, PLACE_TITLE_TEMPLATES, CASE_TITLE_TEMPLATES, type Theme,
+} from './themes'
 import { DIRS, placeWords, leftoverCells, finalizeGrid, canPlace, fits, put, type Grid } from './grid'
 import { makeAtoms, buildPayload, type Atoms } from './mechanics'
 import { buildMode } from './modes'
@@ -25,15 +27,6 @@ const MECH_MAP: Record<string, Mechanic> = {
   F: 'deduction',
   G: 'interrogation',
   H: 'timeline',
-}
-
-/** Extra per-mechanic title options for non-word-search cases. */
-const MECH_TITLES: Partial<Record<Mechanic, string[]>> = {
-  cryptogram: ['The Cipher', 'Coded Words', 'A Message in Code', 'The Zodiac Letter'],
-  deduction: ['Process of Elimination', 'Four Suspects', 'The Logic of Murder'],
-  interrogation: ['One of Them Lies', 'The Interrogation', 'Four Statements'],
-  timeline: ['The Timeline', 'Order of Events', 'That Night, In Order'],
-  anagram: ['The Confession', 'Last Words'],
 }
 
 const DIRS_BY_VOL: Record<number, string[]> = {
@@ -87,6 +80,28 @@ function placeDecoys(rng: Rng, grid: Grid, size: number, pool: string[], target:
   }
 }
 
+const capWords = (s: string) => s.replace(/\b\w/g, (ch) => ch.toUpperCase())
+
+/**
+ * Titles come from the theme: its hand-written titles first, then place-based
+ * templates, then theme-neutral victim/motive templates. Already-used titles
+ * are skipped so the 150-case run stays unique without reseeding.
+ */
+function pickTitle(rng: Rng, theme: Theme, a: Atoms, used: ReadonlySet<string>): string | null {
+  const fresh = (xs: string[]) => xs.filter((t) => !used.has(t))
+  const own = fresh([
+    ...theme.titles,
+    ...PLACE_TITLE_TEMPLATES.map((t) => t.replaceAll('{place}', capWords(theme.place))),
+  ])
+  const fallback = fresh(
+    CASE_TITLE_TEMPLATES.map((t) =>
+      t.replaceAll('{victim}', a.victim).replaceAll('{motive}', a.motive),
+    ),
+  )
+  if (own.length && (rng() < 0.8 || !fallback.length)) return pick(rng, own)
+  return fallback.length ? pick(rng, fallback) : null
+}
+
 function fillFlavor(tpl: string, a: Atoms, place: string): string {
   return tpl
     .replaceAll('{victim}', a.victim)
@@ -99,7 +114,9 @@ function fillFlavor(tpl: string, a: Atoms, place: string): string {
  * Generate one case. `salt` bumps the seed on title collisions so the whole
  * 150-case run stays deterministic. Returns null if all attempts fail.
  */
-export function generateCase(id: number, salt: number, recentThemes: Set<string>): CaseFile | null {
+export function generateCase(
+  id: number, salt: number, recentThemes: Set<string>, usedTitles: ReadonlySet<string> = new Set(),
+): CaseFile | null {
   const vol = volumeOf(id)
   const idx = id - (vol - 1) * 50
   const mechanic = MECH_MAP[PATTERNS[vol][(id - 1) % 10]]
@@ -111,7 +128,7 @@ export function generateCase(id: number, salt: number, recentThemes: Set<string>
 
     const available = THEMES.filter((t) => !recentThemes.has(t.id))
     const theme: Theme = pick(rng, available.length ? available : THEMES)
-    const atoms = makeAtoms(rng)
+    const atoms = makeAtoms(rng, theme)
 
     const isWS = WORD_SEARCH_MECHANICS.includes(mechanic)
     let grid: string[] = []
@@ -140,32 +157,23 @@ export function generateCase(id: number, salt: number, recentThemes: Set<string>
       placeDecoys(rng, placed.grid, size, decoyPool, LEFTOVER_TARGET[mechanic])
 
       const cells = leftoverCells(placed.grid, size)
-      const built = buildPayload(mechanic, rng, cells.length, cells, atoms, words)
+      const built = buildPayload(mechanic, rng, cells.length, cells, atoms, words, theme)
       if (!built || built.fill.length !== cells.length) continue
       grid = finalizeGrid(placed.grid, size, cells, built.fill)
       placements = placed.placements
       payload = built.payload
     } else {
-      payload = buildMode(mechanic, rng, atoms, vol)
+      payload = buildMode(mechanic, rng, atoms, vol, theme)
       if (!payload) continue
     }
 
-    const titlePool = [
-      ...theme.titles,
-      ...(MECH_TITLES[mechanic] ?? []),
-      ...TITLE_TEMPLATES.map((t) =>
-        t
-          .replaceAll('{victim}', atoms.victim)
-          .replaceAll('{place}', theme.place.replace(/\b\w/g, (ch) => ch.toUpperCase()))
-          .replaceAll('{location}', atoms.location)
-          .replaceAll('{motive}', atoms.motive),
-      ),
-    ]
+    const title = pickTitle(rng, theme, atoms, usedTitles)
+    if (!title) continue
 
     return {
       id,
       volume: vol,
-      title: pick(rng, titlePool),
+      title,
       themeId: theme.id,
       mechanic,
       rows: isWS ? size : 0,
@@ -197,7 +205,7 @@ export function generateAll(count = 150): { cases: CaseFile[]; index: CaseIndexE
   for (let id = 1; id <= count; id++) {
     let c: CaseFile | null = null
     for (let salt = 0; salt < 50 && !c; salt++) {
-      c = generateCase(id, salt, recentThemes)
+      c = generateCase(id, salt, recentThemes, usedTitles)
       if (c && usedTitles.has(c.title)) c = null
     }
     if (!c) throw new Error(`failed to generate case ${id}`)

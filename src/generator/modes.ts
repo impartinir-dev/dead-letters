@@ -8,9 +8,10 @@ import { pick, pickN, shuffle, int } from './rng'
 import type { Atoms } from './mechanics'
 import { squash, titleCase } from './mechanics'
 import {
-  FIRST_NAMES, SURNAMES, WEAPONS, LOCATIONS,
+  FIRST_NAMES, SURNAMES,
   CIPHER_PHRASES, TIMELINE_EVENTS,
 } from './pools'
+import type { Theme } from './themes'
 import type {
   CryptogramPayload, DeductionClue, DeductionPayload,
   InterrogationPayload, Statement, TimeClue, TimelinePayload,
@@ -145,7 +146,7 @@ const clueText = (kind: DeductionClue['kind'], a: string, b?: string): string =>
   }
 }
 
-export function buildDeduction(rng: Rng, a: Atoms): DeductionPayload | null {
+export function buildDeduction(rng: Rng, a: Atoms, theme: Theme): DeductionPayload | null {
   const suspects = shuffle(rng, [
     a.killer,
     ...pickN(
@@ -156,8 +157,8 @@ export function buildDeduction(rng: Rng, a: Atoms): DeductionPayload | null {
       3,
     ).map((f) => titleCase(`${f} ${pick(rng, SURNAMES)}`)),
   ])
-  const weapons = shuffle(rng, [a.weapon, ...pickN(rng, WEAPONS.filter((w) => w !== a.weapon.toUpperCase()), 3).map(titleCase)])
-  const locations = shuffle(rng, [a.location, ...pickN(rng, LOCATIONS.filter((l) => l !== a.location.toUpperCase()), 3).map(titleCase)])
+  const weapons = shuffle(rng, [a.weapon, ...pickN(rng, theme.weapons.filter((w) => w !== a.weapon), 3)])
+  const locations = shuffle(rng, [a.location, ...pickN(rng, theme.rooms.filter((l) => l !== a.location), 3)])
 
   // world: killer keeps the case's weapon/location; the rest permute
   const otherWeapons = shuffle(rng, weapons.filter((w) => w !== a.weapon))
@@ -390,11 +391,11 @@ export function buildTimeline(rng: Rng, _a: Atoms, vol: number): TimelinePayload
 /* ------------------------------ dispatcher ----------------------------- */
 
 export function buildMode(
-  mechanic: string, rng: Rng, a: Atoms, vol: number,
+  mechanic: string, rng: Rng, a: Atoms, vol: number, theme: Theme,
 ): CryptogramPayload | DeductionPayload | InterrogationPayload | TimelinePayload | null {
   switch (mechanic) {
     case 'cryptogram': return buildCryptogram(rng, a, vol)
-    case 'deduction': return buildDeduction(rng, a)
+    case 'deduction': return buildDeduction(rng, a, theme)
     case 'interrogation': return buildInterrogation(rng, a)
     case 'timeline': return buildTimeline(rng, a, vol)
     default: return null

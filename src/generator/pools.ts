@@ -19,19 +19,7 @@ export const SURNAMES = [
   'UNDERWOOD', 'VALE', 'VOSS', 'WEXLER', 'WHITLOCK', 'WREN', 'YORK',
 ]
 
-export const WEAPONS = [
-  'CANDLESTICK', 'ROPE', 'WRENCH', 'REVOLVER', 'DAGGER', 'POISON',
-  'LETTER OPENER', 'ICE PICK', 'SHOTGUN', 'CROWBAR', 'LEAD PIPE', 'SCISSORS',
-  'HAMMER', 'SYRINGE', 'FIRE POKER', 'VASE', 'BROKEN BOTTLE', 'PILLOW',
-  'AXE', 'MACHETE', 'TROPHY', 'SCALPEL', 'GARDEN SHEARS', 'CORD', 'BRICK',
-]
-
-export const LOCATIONS = [
-  'LIBRARY', 'CONSERVATORY', 'DOCKS', 'ATTIC', 'CELLAR', 'STUDIO', 'OFFICE',
-  'BALLROOM', 'KITCHEN', 'GARDEN', 'PIER', 'SUITE', 'LOUNGE', 'BOXCAR',
-  'LOBBY', 'CHAPEL', 'STABLE', 'GREENHOUSE', 'ROOFTOP', 'STUDY', 'PANTRY',
-  'BOATHOUSE', 'PARLOR', 'BASEMENT',
-]
+/* Weapons and locations live per theme in themes.ts (rooms / weapons). */
 
 export const MOTIVES = [
   'INHERITANCE', 'JEALOUSY', 'REVENGE', 'BLACKMAIL', 'RIVALRY', 'GREED',
@@ -136,13 +124,13 @@ export const CLUE_TEXT: Record<TraitDim, Record<string, { msg: string; readable:
 export const CIPHER_PHRASES = [
   'I DID IT FOR THE MONEY',
   'MEET ME AT THE {LOCATION} AT MIDNIGHT',
-  'THE {WEAPON} IS UNDER THE PIER',
+  'THE {WEAPON} IS HIDDEN IN THE {LOCATION}',
   'BURN THIS LETTER AT ONCE',
   'SHE KNEW TOO MUCH',
   'THE WILL IS IN THE DESK DRAWER',
   'NO ONE WILL EVER FIND HER',
   'IT WAS ALWAYS ABOUT THE {MOTIVE}',
-  'I SAW EVERYTHING FROM THE ATTIC',
+  'I SAW EVERYTHING FROM THE {LOCATION}',
   'THE SAFE CODE IS HER BIRTHDAY',
   'ASK THE MAID WHAT SHE SAW',
   'THE MONEY IS BURIED AT THE {LOCATION}',
@@ -193,7 +181,7 @@ export const ELIM_NOTES = {
     'The {item} was ruled out by forensics.',
     'The wound does not match the {item}.',
     'The {item} was never at the scene.',
-    'Ballistics clear the {item}.',
+    'Not a drop of blood on the {item}.',
   ],
   location: [
     'The {loc} was locked all night.',
