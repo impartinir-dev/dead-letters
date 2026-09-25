@@ -1,7 +1,7 @@
 import type { Rng } from './rng'
 import { mulberry32, seedFor, pick, pickN, int, shuffle } from './rng'
 import {
-  THEMES, FLAVOR_TEMPLATES, PLACE_TITLE_TEMPLATES, CASE_TITLE_TEMPLATES, type Theme,
+  THEMES, PLACE_TITLE_TEMPLATES, CASE_TITLE_TEMPLATES, type Theme,
 } from './themes'
 import { DIRS, placeWords, leftoverCells, finalizeGrid, canPlace, fits, put, type Grid } from './grid'
 import { makeAtoms, buildPayload, type Atoms } from './mechanics'
@@ -102,21 +102,34 @@ function pickTitle(rng: Rng, theme: Theme, a: Atoms, used: ReadonlySet<string>):
   return fallback.length ? pick(rng, fallback) : null
 }
 
-function fillFlavor(tpl: string, a: Atoms, place: string): string {
-  return tpl
-    .replaceAll('{victim}', a.victim)
-    .replaceAll('{place}', place)
-    .replaceAll('{weapon}', a.weapon.toLowerCase())
-    .replaceAll('{location}', a.location.toLowerCase())
+/** Casebook-wide state that keeps the 150 cases varied. */
+export interface GenContext {
+  /** themes used by the last few cases (skipped) */
+  recentThemes: ReadonlySet<string>
+  usedTitles: ReadonlySet<string>
+  /** surnames that already appear SURNAME_CAP times */
+  blockedSurnames: ReadonlySet<string>
+  /** how often each intro template (by text) has been used */
+  introUses: ReadonlyMap<string, number>
+}
+
+export const SURNAME_CAP = 4
+
+/** The theme's least-used intro (ties broken by the rng), filled in. */
+function pickIntro(rng: Rng, theme: Theme, a: Atoms, uses: ReadonlyMap<string, number>): string {
+  const min = Math.min(...theme.intros.map((t) => uses.get(t) ?? 0))
+  const tpl = pick(rng, theme.intros.filter((t) => (uses.get(t) ?? 0) === min))
+  return tpl.replaceAll('{victim}', a.victim).replaceAll('{first}', a.victim.split(' ')[0])
 }
 
 /**
- * Generate one case. `salt` bumps the seed on title collisions so the whole
+ * Generate one case. `salt` bumps the seed on collisions so the whole
  * 150-case run stays deterministic. Returns null if all attempts fail.
  */
-export function generateCase(
-  id: number, salt: number, recentThemes: Set<string>, usedTitles: ReadonlySet<string> = new Set(),
-): CaseFile | null {
+export function generateCase(id: number, salt: number, ctx: Partial<GenContext> = {}): CaseFile | null {
+  const recentThemes = ctx.recentThemes ?? new Set<string>()
+  const usedTitles = ctx.usedTitles ?? new Set<string>()
+  const introUses = ctx.introUses ?? new Map<string, number>()
   const vol = volumeOf(id)
   const idx = id - (vol - 1) * 50
   const mechanic = MECH_MAP[PATTERNS[vol][(id - 1) % 10]]
@@ -128,7 +141,7 @@ export function generateCase(
 
     const available = THEMES.filter((t) => !recentThemes.has(t.id))
     const theme: Theme = pick(rng, available.length ? available : THEMES)
-    const atoms = makeAtoms(rng, theme)
+    const atoms = makeAtoms(rng, theme, ctx.blockedSurnames)
 
     const isWS = WORD_SEARCH_MECHANICS.includes(mechanic)
     let grid: string[] = []
@@ -138,9 +151,12 @@ export function generateCase(
 
     if (isWS) {
       const wc = wordCount(rng, vol)
-      const themeWords = theme.words.filter((w) => w.length <= size)
+      // bank/decoy words never spell a cast member's role (clues refer to roles)
+      const roles = atoms.suspects.map((s) => s.role.toUpperCase().replace(/[^A-Z]/g, ''))
+      const usable = (w: string) => w.length <= size && !roles.some((r) => w.includes(r) || r.includes(w))
+      const themeWords = theme.words.filter(usable)
       words = pickN(rng, themeWords, wc)
-      const filler = shuffle(rng, CRIME_FILLER.filter((w) => w.length <= size))
+      const filler = shuffle(rng, CRIME_FILLER.filter(usable))
       for (const w of filler) {
         if (words.length >= wc) break
         if (!words.includes(w)) words.push(w)
@@ -151,8 +167,8 @@ export function generateCase(
 
       // decoy words (red herrings hidden but not in the bank)
       const decoyPool = [
-        ...theme.words.filter((w) => !words.includes(w) && w.length <= size),
-        ...CRIME_FILLER.filter((w) => !words.includes(w) && w.length <= size),
+        ...theme.words.filter((w) => !words.includes(w) && usable(w)),
+        ...CRIME_FILLER.filter((w) => !words.includes(w) && usable(w)),
       ]
       placeDecoys(rng, placed.grid, size, decoyPool, LEFTOVER_TARGET[mechanic])
 
@@ -186,7 +202,7 @@ export function generateCase(
       weapon: atoms.weapon,
       location: atoms.location,
       motive: atoms.motive,
-      flavor: fillFlavor(pick(rng, FLAVOR_TEMPLATES), atoms, theme.place),
+      flavor: pickIntro(rng, theme, atoms, introUses),
       parSeconds: isWS
         ? Math.round(25 + words.length * 6 + size * size * 0.35)
         : int(rng, 60, 110),
@@ -202,15 +218,30 @@ export function generateAll(count = 150): { cases: CaseFile[]; index: CaseIndexE
   const usedTitles = new Set<string>()
   const recentThemes = new Set<string>()
   const themeQueue: string[] = []
+  const surnameUses = new Map<string, number>()
+  const blockedSurnames = new Set<string>()
+  const introUses = new Map<string, number>()
 
   for (let id = 1; id <= count; id++) {
     let c: CaseFile | null = null
     for (let salt = 0; salt < 50 && !c; salt++) {
-      c = generateCase(id, salt, recentThemes, usedTitles)
+      c = generateCase(id, salt, { recentThemes, usedTitles, blockedSurnames, introUses })
       if (c && usedTitles.has(c.title)) c = null
     }
     if (!c) throw new Error(`failed to generate case ${id}`)
 
+    for (const name of [c.victim, ...c.suspects.map((s) => s.name)]) {
+      const s = name.split(' ').slice(1).join(' ').toUpperCase()
+      const n = (surnameUses.get(s) ?? 0) + 1
+      surnameUses.set(s, n)
+      if (n >= SURNAME_CAP) blockedSurnames.add(s)
+    }
+    const theme = THEMES.find((t) => t.id === c.themeId)!
+    const first = c.victim.split(' ')[0]
+    const intro = theme.intros.find(
+      (t) => t.replaceAll('{victim}', c!.victim).replaceAll('{first}', first) === c!.flavor,
+    )!
+    introUses.set(intro, (introUses.get(intro) ?? 0) + 1)
     usedTitles.add(c.title)
     themeQueue.push(c.themeId)
     recentThemes.clear()

@@ -33,12 +33,13 @@ const firstName = (name: string) => name.split(' ')[0]
 
 /**
  * Victim, 4-person cast (distinct first names and surnames, each with a theme
- * role + hook), and the killer among them. Weapon and location come only from
+ * role + hook), and the killer among them. `blockedSurnames` are ones already
+ * used up across the casebook. Weapon and location come only from
  * the theme's own pools.
  */
-export function makeAtoms(rng: Rng, theme: Theme): Atoms {
+export function makeAtoms(rng: Rng, theme: Theme, blockedSurnames: ReadonlySet<string> = new Set()): Atoms {
   const firsts = pickN(rng, FIRST_NAMES, 5)
-  const lasts = pickN(rng, SURNAMES, 5)
+  const lasts = pickN(rng, SURNAMES.filter((s) => !blockedSurnames.has(s)), 5)
   const victim = titleCase(`${firsts[0]} ${lasts[0]}`)
   const roles = pickN(rng, theme.suspects, 4)
   const cast: CaseSuspect[] = roles.map((r, i) => ({
@@ -82,19 +83,13 @@ type Blank = 'killer' | 'weapon' | 'location'
 
 /**
  * Clue cores point at the killer by role ("THE SOMMELIER DID IT") so the
- * player has to match the clue against the cast. `byName` gives the plain
- * "IT WAS <NAME>" fallbacks, used only when no role core fits.
+ * player has to match the clue against the cast. When none fits the grid's
+ * leftover count, the case generator retries with a different layout.
  */
-function leftoverCores(blanks: Blank[], a: Atoms, byName: boolean): string[] {
-  const K = byName ? squash(a.killer) : `THE${squash(a.killerRole)}`
+function leftoverCores(blanks: Blank[], a: Atoms): string[] {
+  const K = `THE${squash(a.killerRole)}`
   const W = squash(a.weapon), L = squash(a.location)
   const has = (b: Blank) => blanks.includes(b)
-  if (byName) {
-    if (has('weapon') && has('location')) return [`ITWAS${K}WITHTHE${W}INTHE${L}`]
-    if (has('weapon')) return [`ITWAS${K}WITHTHE${W}`]
-    if (has('location')) return [`ITWAS${K}INTHE${L}`]
-    return [`ITWAS${K}`]
-  }
   if (has('weapon') && has('location'))
     return [
       `${K}DIDITWITHTHE${W}INTHE${L}`,
@@ -133,23 +128,21 @@ function buildLeftovers(
     ['killer'],
   ]
   const order = chance(rng, 0.55) ? canonical : shuffle(rng, canonical)
-  for (const byName of [false, true]) {
-    for (const blanks of order) {
-      const forbidden = forbiddenTerms(a, theme, {
-        killer: true,
-        weapon: blanks.includes('weapon'),
-        location: blanks.includes('location'),
-      })
-      const fit = fitMessage(rng, leftoverCores(blanks, a, byName), L, theme.phrases, forbidden)
-      if (fit) {
-        const ord: Record<Blank, number> = { killer: 0, weapon: 1, location: 2 }
-        return {
-          kind: 'leftovers',
-          message: fit.message,
-          core: fit.core,
-          blanks: blanks.slice().sort((x, y) => ord[x] - ord[y]),
-          messageCells,
-        }
+  for (const blanks of order) {
+    const forbidden = forbiddenTerms(a, theme, {
+      killer: true,
+      weapon: blanks.includes('weapon'),
+      location: blanks.includes('location'),
+    })
+    const fit = fitMessage(rng, leftoverCores(blanks, a), L, theme.phrases, forbidden)
+    if (fit) {
+      const ord: Record<Blank, number> = { killer: 0, weapon: 1, location: 2 }
+      return {
+        kind: 'leftovers',
+        message: fit.message,
+        core: fit.core,
+        blanks: blanks.slice().sort((x, y) => ord[x] - ord[y]),
+        messageCells,
       }
     }
   }

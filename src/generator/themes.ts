@@ -22,6 +22,11 @@ export interface Theme {
   suspects: Array<{ role: string; hook: string }>
   /** in-world padding phrases for leftover messages (uppercase, spaces) */
   phrases: string[]
+  /**
+   * 3 hand-written case intros (2–3 sentences). `{victim}` = full name,
+   * `{first}` = first name. Never name a room, weapon, or suspect role.
+   */
+  intros: string[]
   words: string[]
 }
 
@@ -45,6 +50,11 @@ export const THEMES: Theme[] = [
       'THE VATS WERE STILL WARM',
       'SOMEONE MOVED THE CASKS',
       'THE LABELS WERE SWAPPED',
+    ],
+    intros: [
+      'Harvest week at the old hillside winery, and the presses ran all night. By dawn {victim} was dead, and the whole estate was keeping its mouth shut.',
+      '{victim} came to the winery to settle an old debt over a glass of the reserve. The glass was never finished. The staff swear nobody left the grounds.',
+      'The new vintage was supposed to make {victim} rich. Instead the winery has a body, four people with something to hide, and a hillside full of silence.',
     ],
     words: [
       'AGED', 'AROMA', 'BARREL', 'BOTTLED', 'BUNG', 'CASK', 'CELLAR',
@@ -72,6 +82,11 @@ export const THEMES: Theme[] = [
       'THE LAST SONG WAS CUT SHORT',
       'THE ENCORE WAS CANCELLED',
     ],
+    intros: [
+      'The band was halfway through the second set when the club went quiet in the wrong way. {victim} never made it to closing time. Everyone in the smoke says they were listening to the music.',
+      '{victim} ran up a tab at the jazz club that no one could ever collect. Tonight someone collected anyway. The music kept playing for a full minute after the scream.',
+      'A full house, a hot band, and {victim} slumped at a corner table before the last number. Nobody saw a thing. Everybody is lying.',
+    ],
     words: [
       'BASS', 'BRASS', 'CHORDS', 'DRUMS', 'ENCORE', 'IMPROV', 'LOUNGE',
       'RHYTHM', 'SAXOPHONE', 'SMOKE', 'SOLO', 'STAGE', 'STANDARDS',
@@ -97,6 +112,11 @@ export const THEMES: Theme[] = [
       'THE TRACKS LED UPHILL',
       'THE LIFT STOPPED AT TEN',
       'SNOW COVERED THE PRINTS',
+    ],
+    intros: [
+      'The storm closed the pass at noon, trapping everyone at the ski lodge. By nightfall {victim} was dead. Whoever did it is still inside, and nobody leaves until the plows come.',
+      '{victim} arrived at the lodge with a suitcase full of secrets and a reservation for one week. It lasted one night. Fresh snow has already covered the tracks outside.',
+      'Après-ski turned into a wake when {victim} was found. The lodge is snowed in, the phone lines are down, and everyone snowed in with {first} has a different story.',
     ],
     words: [
       'AVALANCHE', 'BINDINGS', 'CHALET', 'CHAIRLIFT', 'FROST', 'GONDOLA',
@@ -124,6 +144,11 @@ export const THEMES: Theme[] = [
       'THE GLASS WAS CRACKED',
       'THE FEEDING RAN LATE',
     ],
+    intros: [
+      "The city aquarium had closed for the night, but the lights in the back corridors were still on. {victim} was found at dawn, and the fish weren't talking.",
+      '{victim} had been lobbying to shut the aquarium down for years. Last night, after a heated meeting, {first} stayed behind. The morning crew found out why.',
+      'Blue light, humming filters, and a silence that felt wrong. The night shift says {victim} was alive at ten. By midnight the aquarium was a crime scene.',
+    ],
     words: [
       'AQUATIC', 'CORAL', 'DIVER', 'FIN', 'GILL', 'JELLYFISH', 'KELP',
       'OCTOPUS', 'PENGUIN', 'REEF', 'SHARK', 'STINGRAY', 'TANK', 'TIDAL',
@@ -149,6 +174,11 @@ export const THEMES: Theme[] = [
       'THE OVEN WAS STILL HOT',
       'FLOUR ON THE DOOR HANDLE',
       'THE BREAD NEVER ROSE',
+    ],
+    intros: [
+      'The corner bakery opens at five, and the ovens are lit by three. This morning they were cold, and {victim} was dead. Flour was everywhere, and so were the fingerprints.',
+      "{victim} guarded the bakery's recipes like crown jewels. Now {first} is dead and the recipe book is missing. The neighborhood wants its bread, and its answers.",
+      "The queue outside the bakery was around the block by six. The door never opened. Inside, {victim} lay among the morning's loaves, and the till was untouched.",
     ],
     words: [
       'BAGUETTE', 'BUTTER', 'CRUMB', 'DOUGH', 'FLOUR', 'GLAZE', 'ICING',
@@ -176,6 +206,11 @@ export const THEMES: Theme[] = [
       'THE SCRIPT WAS CHANGED',
       'CHECK THE DAILIES',
     ],
+    intros: [
+      'Night shoots run late, but this one ran into murder. {victim} walked off set between takes and never came back. The cameras were rolling; the question is what they caught.',
+      'The picture was over budget and behind schedule. Then {victim} turned up dead, and the whole crew had a reason. Production is halted until someone confesses.',
+      "{victim} had one scene left to shoot. The call sheet said ten o'clock. At ten-fifteen the set went dark, and when the lights came back, so did the screaming.",
+    ],
     words: [
       'ACTOR', 'CAMERA', 'CASTING', 'CLAPPER', 'CUT', 'DIRECTOR',
       'EXTRAS', 'LIGHTING', 'REEL', 'SCENE', 'SCRIPT', 'SOUND', 'TAKE',
@@ -201,6 +236,11 @@ export const THEMES: Theme[] = [
       'THE SHIP NEVER SLOWED',
       'SOMEONE WENT OVERBOARD',
       'CHECK THE MANIFEST',
+    ],
+    intros: [
+      'Three days out to sea and a thousand miles from the nearest police station. {victim} missed dinner, then missed breakfast. The killer is still aboard.',
+      'The liner glided through calm water while {victim} died somewhere below the waterline. No one can leave and no one can arrive, so everyone aboard is a suspect.',
+      "{victim} booked the voyage to escape a scandal back home. The scandal booked passage too. By the second night, the ship's doctor was signing a death certificate.",
     ],
     words: [
       'ANCHOR', 'BUFFET', 'CABIN', 'CAPTAIN', 'DECK', 'HARBOR',
@@ -228,6 +268,11 @@ export const THEMES: Theme[] = [
       'A PAGE WAS TORN OUT',
       'THE LIGHTS STAYED ON',
     ],
+    intros: [
+      'The public library closed at nine. At nine-thirty someone was still turning pages. At ten, {victim} was dead, and the only witnesses were a million silent books.',
+      '{victim} had found something in the library that someone wanted kept buried. A call slip with a strange number was the last thing {first} ever signed for.',
+      'Dust, lamplight, and the tick of an old wall clock. The night was supposed to be quiet. Instead it ended with {victim} face-down among the shelves.',
+    ],
     words: [
       'ARCHIVE', 'AUTHOR', 'CATALOG', 'CHAPTER', 'DUE', 'INDEX',
       'LIBRARIAN', 'NOVEL', 'PAGE', 'QUIET', 'READER', 'SHELF',
@@ -253,6 +298,11 @@ export const THEMES: Theme[] = [
       'THE NET WAS CUT',
       'THE ANIMALS WERE RESTLESS',
       'THE SHOW WENT ON',
+    ],
+    intros: [
+      "The traveling circus rolled into town on Friday and was due to leave on Sunday. Now it can't leave at all. {victim} was found after the final show, and the whole troupe is under suspicion.",
+      'Under the painted smiles, the circus has always kept its own secrets. {victim} threatened to tell them. The band played on while {first} died.',
+      'Sawdust, spotlights, and the roar of the crowd covered everything. By the time the audience filed out, {victim} was gone. Circus folk close ranks when outsiders ask questions.',
     ],
     words: [
       'ACROBAT', 'BIGTOP', 'CLOWN', 'JUGGLER', 'LION', 'PARADE',
@@ -280,6 +330,11 @@ export const THEMES: Theme[] = [
       'THE FLAG WAS MOVED',
       'FOOTPRINTS IN THE SAND',
     ],
+    intros: [
+      "The members' tournament was supposed to end with a handshake and a toast. It ended with {victim} dead before the last round. The club would very much like this settled quietly.",
+      '{victim} was the kind of member everyone smiled at and nobody liked. Early this morning the sprinklers came on and revealed why {first} never went home.',
+      'Fog lay over the fairways at dawn, and {victim} lay somewhere in it. The course has cameras on the gates but not on the grounds. Somebody knew that.',
+    ],
     words: [
       'BOGEY', 'BUNKER', 'CADDIE', 'CART', 'DRIVER', 'FAIRWAY', 'GREEN',
       'HOLE', 'IRON', 'PAR', 'PUTTER', 'ROUGH', 'TEE', 'DIVOT', 'CLUBHOUSE',
@@ -304,6 +359,11 @@ export const THEMES: Theme[] = [
       'THE CAMERAS WENT DARK',
       'THE DECK WAS STACKED',
       'COUNT THE CHIPS AGAIN',
+    ],
+    intros: [
+      '{victim} was on a winning streak nobody believed was luck. At three in the morning the streak ended for good. The riverside casino never closes, which means it never stops watching.',
+      'The house always wins. Last night {victim} tried to prove otherwise and lost a great deal more than money. Somebody on the casino floor made sure of it.',
+      'Chips on the carpet, a chair tipped over, and {victim} not breathing. The floor was packed, the cameras blinked at the worst moment, and everyone swears they were watching the wheel.',
     ],
     words: [
       'BET', 'BLACKJACK', 'CHIPS', 'CROUPIER', 'DEALER', 'DICE',
@@ -331,6 +391,11 @@ export const THEMES: Theme[] = [
       'SOMEONE MISSED A CUE',
       'THE LIGHTS FLICKERED',
     ],
+    intros: [
+      'Opening night at the grand old theater, and the house was sold out. {victim} missed the curtain call. The show did not go on.',
+      '{victim} had waited twenty years for this part. Somebody else had waited twenty minutes for {first} to be alone. The theater is sealed, and the cast is still in makeup.',
+      'The applause was still echoing when a scream came from the wings. {victim} was already beyond help. Everyone in the company has a reason and an alibi, and not every alibi is true.',
+    ],
     words: [
       'ACT', 'AISLE', 'APPLAUSE', 'BALCONY', 'CURTAIN', 'INTERMISSION',
       'MATINEE', 'PLAYBILL', 'REHEARSAL', 'SPOTLIGHT', 'STAGE', 'USHER',
@@ -356,6 +421,11 @@ export const THEMES: Theme[] = [
       'THE ALARM NEVER SOUNDED',
       'THE LABEL WAS FORGED',
       'A CASE WAS LEFT OPEN',
+    ],
+    intros: [
+      'The natural history museum held a gala for its new exhibit. {victim} left the party early, or so everyone assumed. The night crew found out otherwise.',
+      "{victim} claimed a prize piece of the museum's collection was a fake and promised proof by morning. Morning came. {first} didn't.",
+      'Marble floors, glass cases, and the long shadows of extinct things. The alarms were silent all night, yet {victim} is dead and something is missing from the catalog.',
     ],
     words: [
       'ARTIFACT', 'CURATOR', 'EXHIBIT', 'FOSSIL', 'GALLERY', 'MARBLE',
@@ -383,6 +453,11 @@ export const THEMES: Theme[] = [
       'TRACKS IN THE MUD',
       'THE GATE WAS LEFT OPEN',
     ],
+    intros: [
+      'The dairy farm has been failing for years, and the whole county knows who stood to gain from its sale. Last night {victim} was found dead at first milking.',
+      '{victim} refused to sell the farm, no matter who asked or how nicely. Someone stopped asking. The rain washed away most of the tracks by dawn.',
+      "Out here the next farm is a mile off and the sheriff is ten. When {victim} didn't answer the dinner bell, nobody worried. By morning, everybody did.",
+    ],
     words: [
       'BARN', 'CATTLE', 'CROPS', 'HARVEST', 'HAY', 'LOAM', 'ORCHARD',
       'PLOW', 'SCYTHE', 'STABLE', 'TRACTOR', 'WHEAT', 'SILO', 'GRAIN',
@@ -408,6 +483,11 @@ export const THEMES: Theme[] = [
       'THE LIGHT WENT DARK',
       'THE LOGBOOK IS WRONG',
       'NO BOAT CAME IN',
+    ],
+    intros: [
+      'For forty years the lonely lighthouse never missed a night. Last night it went dark, and in the morning {victim} was dead. Ships could have been lost, and one life already was.',
+      '{victim} rowed out to the lighthouse island with a letter no one else was meant to read. The storm cut the island off for two days. The letter is gone.',
+      'The foghorn sounded every thirty seconds, all night, over the body of {victim}. Everyone on the island heard it. Everyone claims they heard nothing else.',
     ],
     words: [
       'BEACON', 'COAST', 'FOG', 'HORN', 'KEROSENE', 'LAMP', 'LENS',
@@ -435,6 +515,11 @@ export const THEMES: Theme[] = [
       'THE DOOR WAS CHAINED',
       'ROOM SERVICE CAME LATE',
     ],
+    intros: [
+      'The grand hotel has hosted royalty, film stars, and at least one ghost. Last night it hosted a murder. {victim} checked in at six and never checked out.',
+      '{victim} tipped generously and asked strange questions at the front desk. At two in the morning a scream rang through the fourth floor. The Do Not Disturb sign was still hanging.',
+      'Brass fittings, velvet carpets, and a staff trained never to notice anything. {victim} is dead, and suddenly everyone at the hotel remembers a great deal.',
+    ],
     words: [
       'BELLHOP', 'CONCIERGE', 'ELEVATOR', 'KEY', 'LOBBY', 'LUGGAGE',
       'MAID', 'MINIBAR', 'PORTER', 'SUITE', 'TOWEL', 'VALET',
@@ -460,6 +545,11 @@ export const THEMES: Theme[] = [
       'THE RIDE STOPPED AT THE TOP',
       'THE GAME WAS RIGGED',
       'THE MUSIC KEPT PLAYING',
+    ],
+    intros: [
+      'The midway carnival glows until midnight, and then everything goes dark at once. When the lights came back on, {victim} was dead. The calliope was still playing.',
+      "{victim} won every game on the midway, which the people running them did not appreciate. On the last night of the season, {first}'s luck ran out.",
+      "Popcorn, sawdust, and screams that are usually just for fun. Tonight one wasn't. {victim} was found after closing, and the carnival folk are packing up faster than they should.",
     ],
     words: [
       'BALLOON', 'CAROUSEL', 'COTTONCANDY', 'FERRIS', 'GAMES', 'MIDWAY',
@@ -487,6 +577,11 @@ export const THEMES: Theme[] = [
       'THE CLOCKS DISAGREE',
       'CHECK THE TICKETS',
     ],
+    intros: [
+      "The overnight express left the city at nine. Somewhere past midnight, between two stations nobody can name, {victim} was killed. The train can't stop until morning, and neither can the investigation.",
+      '{victim} boarded the express with a first-class ticket and a locked briefcase. The briefcase is still locked. {first} is not still breathing.',
+      'Snow on the line has halted the express in the middle of nowhere. Somewhere aboard, {victim} lies dead. Every passenger has a berth, a reason, and a story ready.',
+    ],
     words: [
       'BERTH', 'BOXCAR', 'CONDUCTOR', 'ENGINE', 'PLATFORM', 'RAIL',
       'SLEEPER', 'TICKET', 'TRACK', 'TUNNEL', 'WHISTLE', 'CABOOSE',
@@ -512,6 +607,11 @@ export const THEMES: Theme[] = [
       'THE TESTIMONY CHANGED',
       'CHECK THE TRANSCRIPT',
       'THE EXHIBIT WAS SWAPPED',
+    ],
+    intros: [
+      'The trial of the decade was one day from a verdict. Then {victim} was found dead inside the county courthouse, and the case everyone was watching became a different case entirely.',
+      '{victim} was due to testify at nine with evidence that would sink somebody. At eight-thirty the courthouse doors were locked. At eight-forty-five, {first} was dead.',
+      'Justice is supposed to be blind, not murderous. After a late recess, {victim} was found dead in the courthouse, and the only people in the building were officers of the court.',
     ],
     words: [
       'ALIBI', 'BAILIFF', 'DEFENSE', 'EVIDENCE', 'GAVEL', 'JUDGE',
@@ -539,6 +639,11 @@ export const THEMES: Theme[] = [
       'THE STORY WAS KILLED',
       'THE PRESSES KEPT RUNNING',
     ],
+    intros: [
+      'The city newsroom never sleeps, but last night it went very quiet. {victim} was working on a story that would have made the front page. Now {first} is the story.',
+      'Deadline was midnight. {victim} filed at eleven-fifty and was dead by twelve. The copy never made it to press, and someone in the building made sure of that.',
+      'Clattering keys, ringing phones, and cigarette smoke thick enough to cut. In all that noise, nobody heard {victim} die. The late edition will have to be rewritten.',
+    ],
     words: [
       'COLUMN', 'DEADLINE', 'EDITOR', 'HEADLINE', 'INK', 'LEAD',
       'PRESS', 'PRINT', 'SOURCE', 'TYPESET', 'BYLINE', 'COPYBOY',
@@ -564,6 +669,11 @@ export const THEMES: Theme[] = [
       'CHECK THE CHART',
       'THE DOSE WAS DOUBLED',
       'THE MONITOR WAS SILENCED',
+    ],
+    intros: [
+      'People die at the county hospital every night. {victim} was not supposed to be one of them. The chart says stable; the body says otherwise.',
+      '{victim} came in for a routine procedure and a quiet recovery. Someone on the night shift had other plans. The hospital would prefer this stays out of the papers.',
+      'Fluorescent lights, squeaking shoes, and machines that never stop beeping. At three in the morning one of them stopped for {victim}. It was not natural causes.',
     ],
     words: [
       'CLINIC', 'DOSE', 'NURSE', 'PATIENT', 'SCALPEL', 'SURGEON',
@@ -591,6 +701,11 @@ export const THEMES: Theme[] = [
       'TRACKS LEAD TO THE LAKE',
       'NOBODY SLEPT THAT NIGHT',
     ],
+    intros: [
+      "The lakeside campground was supposed to be a weekend away from it all. {victim} couldn't get away from someone. The body was found at first light, and the only road out is washed out.",
+      'Ghost stories around the fire, then lights out. At midnight {victim} slipped out of the tent. Nobody saw {first} alive again.',
+      'Loons calling, pine smoke, and still water: the kind of place where nothing happens, until it does. {victim} is dead, and everyone at the campground swears they slept through the night.',
+    ],
     words: [
       'CANOE', 'CAMPFIRE', 'CANTEEN', 'LANTERN', 'MOSQUITO', 'TENT',
       'TRAIL', 'WILDERNESS', 'COMPASS', 'FIREWOOD', 'SLEEPINGBAG',
@@ -617,6 +732,11 @@ export const THEMES: Theme[] = [
       'THE FOG ROLLED IN',
       'THE TIDE WAS GOING OUT',
     ],
+    intros: [
+      'The foggy harbor keeps odd hours, and its people keep odd secrets. Before dawn, {victim} was pulled from the cold water. It was not an accident.',
+      '{victim} knew what was really in the crates coming off the night boats. Knowing turned out to be dangerous. The tide took some of the evidence, but not all of it.',
+      'Gulls, foghorns, and the slap of water on the pilings. {victim} was last seen walking toward the waterfront at midnight. Everyone there saw something, and nobody wants to say what.',
+    ],
     words: [
       'ANCHOR', 'BUOY', 'CARGO', 'DOCK', 'FERRY', 'HULL', 'MOORING',
       'ROPE', 'TIDE', 'WHARF', 'CRANE', 'FOGHORN', 'TRAWLER', 'NETS',
@@ -641,6 +761,11 @@ export const THEMES: Theme[] = [
       'THE ARIA WAS CUT SHORT',
       'THE HIGH NOTE COVERED THE SCREAM',
       'CHECK THE PROGRAM',
+    ],
+    intros: [
+      'The grand opera house was full for the premiere. In the third act the music swelled, and somewhere in the building {victim} fell silent forever.',
+      '{victim} had enemies in every corner of the opera house, from the stalls to the rafters. Tonight one of them stopped waiting. The final aria covered the sound.',
+      'Gilt, velvet, and a thousand people watching the stage. That was the point. While every eye was elsewhere, {victim} was killed, and the evening ended in a real tragedy.',
     ],
     words: [
       'ARIA', 'BARITONE', 'CHORUS', 'COSTUME', 'LIBRETTO', 'MEZZANINE',
@@ -668,6 +793,11 @@ export const THEMES: Theme[] = [
       'THE HORSE WAS DRUGGED',
       'CHECK THE SCORES',
     ],
+    intros: [
+      'The county rodeo draws the whole valley for three dusty days. On the second night, {victim} was found dead behind the arena. The crowd had been cheering too loudly to hear a thing.',
+      "{victim} had money riding on the championship and made sure everyone knew it. By the last go-round, the money was the least of {first}'s problems.",
+      'Dust, leather, and a loudspeaker crackling out the scores. Between events, {victim} disappeared. The search ended at dawn, and so did any chance of calling it an accident.',
+    ],
     words: [
       'BRONCO', 'BUCKLE', 'CORRAL', 'LASSO', 'RIDER', 'SPURS',
       'STAMPEDE', 'STEER', 'BARREL', 'CLOWN', 'CHUTE', 'LARIAT',
@@ -693,6 +823,11 @@ export const THEMES: Theme[] = [
       'THE PASSWORD CHANGED',
       'THE RAID WAS A TIPOFF',
       'THE LEDGER IS MISSING',
+    ],
+    intros: [
+      'You need a password to get into the underground speakeasy, and a good reason to leave early. {victim} had neither. Before the lights came up, {first} was dead.',
+      'Bathtub gin, a hot trumpet, and the police paid to look the other way. Last night they had something to look away from: {victim}, dead, and a room full of people who were never here.',
+      '{victim} knew where every dollar in the speakeasy went and who it was paid to. Somebody decided that knowledge had to disappear, and {first} along with it.',
     ],
     words: [
       'BOOTLEG', 'FLAPPER', 'GIN', 'HIDDEN', 'JAZZ', 'PASSWORD',
@@ -720,6 +855,11 @@ export const THEMES: Theme[] = [
       'FRESH SOIL ON THE PATH',
       'THE GATE WAS UNLOCKED',
     ],
+    intros: [
+      'The botanical garden was hosting its midsummer evening, all lanterns and string music. {victim} wandered off along the paths and never came back. The flowers kept their secrets.',
+      '{victim} planned to change the will that funds the botanical garden. The lawyer was due on Monday. {first} did not live to see Sunday.',
+      'Humid glass, wet earth, and the scent of a thousand blooms. It should have been beautiful. Instead the botanical garden opened this morning to find {victim} dead among the beds.',
+    ],
     words: [
       'BLOOM', 'FERN', 'GARDEN', 'GREENHOUSE', 'LILY', 'ORCHID',
       'PETAL', 'POLLEN', 'TULIP', 'VINE', 'PRUNER', 'TERRARIUM',
@@ -745,6 +885,11 @@ export const THEMES: Theme[] = [
       'THE FIGHT WAS FIXED',
       'CHECK THE BETTING SLIPS',
       'THE BELL RANG EARLY',
+    ],
+    intros: [
+      'The smoky boxing gym has seen broken noses and broken dreams. Last night it saw worse. {victim} was found after closing, and the fight everyone had money on is off.',
+      "{victim} was supposed to throw the fight on Saturday. On Thursday, word got around that {first} had changed their mind. By Friday, it didn't matter anymore.",
+      'Sweat, leather, and the thud of gloves on a heavy bag. The gym went quiet an hour after midnight, and {victim} never walked out. Everyone here knows how to hurt somebody.',
     ],
     words: [
       'BELL', 'BOUT', 'CANVAS', 'CORNER', 'GLOVES', 'JAB', 'PUNCH',
@@ -772,6 +917,11 @@ export const THEMES: Theme[] = [
       'CHECK THE SCORESHEET',
       'THE GAME WAS THROWN',
     ],
+    intros: [
+      'The old chess club was hosting its championship final. Between the adjournment and the resumption, {victim} was murdered. The game was never finished.',
+      '{victim} had not lost a game at the club in eleven years. Someone finally found a way to beat {first}, and it had nothing to do with chess.',
+      'Silence is the rule at the chess club, which made the thud all the more startling. {victim} was dead before anyone looked up from the boards. Every player here thinks five moves ahead.',
+    ],
     words: [
       'BISHOP', 'BOARD', 'CASTLE', 'CHECK', 'GAMBIT', 'KING', 'KNIGHT',
       'MATE', 'PAWN', 'QUEEN', 'ROOK', 'ENDGAME', 'BLITZ', 'SACRIFICE',
@@ -796,6 +946,11 @@ export const THEMES: Theme[] = [
       'THE COFFEE WAS COLD',
       'CHECK THE ORDER SLIPS',
       'THE JUKEBOX STOPPED',
+    ],
+    intros: [
+      'The all-night diner never closes. At four in the morning, {victim} ordered the special and never finished it. The jukebox was still playing when the sirens arrived.',
+      '{victim} came to the diner every night at the same hour and sat in the same spot. Tonight someone was waiting. The neon sign kept buzzing through all of it.',
+      'Grease, neon, and bottomless cups. The late crowd at the diner is a strange mix of drifters and night owls, and one of them killed {victim} between orders.',
     ],
     words: [
       'BOOTH', 'COFFEE', 'COUNTER', 'GRIDDLE', 'JUKEBOX', 'MILKSHAKE',
@@ -823,6 +978,11 @@ export const THEMES: Theme[] = [
       'HEADLIGHTS IN THE DARK',
       'CHECK THE PARKING STUBS',
     ],
+    intros: [
+      "It was double-feature night at the moonlight drive-in, and every space was taken. When the second picture ended, one car didn't start its engine. Inside was {victim}.",
+      '{victim} always parked in the same spot at the drive-in, close to the screen and far from the lights. Last night that habit proved fatal.',
+      'Crackling speakers, headlights off, and a monster movie loud enough to drown out anything. Somewhere in the dark, {victim} was murdered, and nobody looked away from the screen.',
+    ],
     words: [
       'CONCESSION', 'FENDER', 'FEATURE', 'HORNS', 'MOVIE', 'PROJECTOR',
       'SCREEN', 'SODA', 'TRAILER', 'MARQUEE', 'REEL', 'DUSK', 'SPEAKER',
@@ -847,6 +1007,11 @@ export const THEMES: Theme[] = [
       'THE PRIZE WAS RIGGED',
       'THE MIRRORS LIE',
       'CHECK THE JUDGING CARDS',
+    ],
+    intros: [
+      'The county fair comes once a year with blue ribbons, fried food, and old grudges. This year it also brought murder. {victim} was found after the judging.',
+      '{victim} was favored to win everything at the fair this year, and made sure the other entrants knew it. The results were never announced.',
+      'Calliope music, spun sugar, and shrieks from the rides. Nobody at the fairground noticed one more scream until {victim} was found at closing time.',
     ],
     words: [
       'BARKER', 'BOOTH', 'FERRIS', 'FUNHOUSE', 'MIRROR', 'PRIZE',
@@ -874,6 +1039,11 @@ export const THEMES: Theme[] = [
       'A VOW WAS BROKEN',
       'CHECK THE REGISTER',
     ],
+    intros: [
+      "The hilltop monastery keeps a vow of silence, which makes a murder very hard to investigate. {victim} was found after vespers. The brothers have written down what they know, and it isn't much.",
+      '{victim} climbed the long road to the monastery seeking sanctuary and found something else. The storm that night kept every visitor and every brother inside the walls.',
+      "Chanting at dawn, bread at noon, prayers at dusk. The monastery's days never change, until the morning {victim} didn't appear. Now its old walls hide one more secret.",
+    ],
     words: [
       'ABBEY', 'BELL', 'CANDLE', 'CELL', 'CHAPEL', 'CHOIR', 'CLOISTER',
       'MONK', 'PRAYER', 'VESPERS', 'SCRIPTORIUM',
@@ -900,6 +1070,11 @@ export const THEMES: Theme[] = [
       'CHECK THE LOGBOOK',
       'THE SHUTTER WAS OPEN',
     ],
+    intros: [
+      'The clifftop observatory was tracking a comet that comes once a century. {victim} was on duty for the big night. By the time the comet passed, {first} was dead.',
+      '{victim} was about to publish a discovery that would rewrite the textbooks. Someone at the observatory decided the world could wait forever.',
+      'Cold wind, a sky full of stars, and the slow grind of machinery turning overhead. In the small hours {victim} was murdered, and the only witnesses were light-years away.',
+    ],
     words: [
       'COMET', 'DOME', 'LENS', 'LUNAR', 'ORBIT', 'PLANET', 'SATELLITE',
       'STAR', 'TELESCOPE', 'ZODIAC', 'ECLIPSE', 'NEBULA', 'COSMOS',
@@ -924,6 +1099,11 @@ export const THEMES: Theme[] = [
       'THE SEAM WAS UNPICKED',
       'CHECK THE MEASUREMENTS',
       'A BUTTON WAS MISSING',
+    ],
+    intros: [
+      'The Savile Row tailor shop has dressed dukes and gangsters for a century. This morning it opened to find {victim} dead among the bolts of cloth. The appointment book has been torn.',
+      '{victim} came in for a final fitting on a suit that was never meant to be worn. By closing time, {first} would never need it.',
+      "Chalk marks, pins, and the smell of hot wool. The tailor shop is a place of precise measurements, and someone measured {victim}'s last evening down to the minute.",
     ],
     words: [
       'BOBBIN', 'BUTTON', 'FABRIC', 'NEEDLE', 'PATTERN', 'PIN', 'SEAM',
@@ -954,16 +1134,4 @@ export const CASE_TITLE_TEMPLATES = [
   'The Night {victim} Died',
   'The {motive} Motive',
   'A {motive} Killing',
-]
-
-/** Shared flavor templates; {victim} {place} {weapon} {location} are filled in. */
-export const FLAVOR_TEMPLATES = [
-  '{victim} was found dead at the {place}. Everyone inside is a suspect.',
-  'A quiet night at the {place} ended in murder. {victim} never saw it coming.',
-  'The {place} is closed until further notice. {victim} is dead, and the killer left traces everywhere.',
-  'Rain fell on the {place} the night {victim} was murdered.',
-  'Nobody heard a thing at the {place}. {victim} was already cold when the lights came on.',
-  '{victim} had enemies. One of them followed them to the {place}.',
-  "The coroner sets {victim}'s time of death at midnight. The {place} holds the answers.",
-  '{victim} walked into the {place} at dusk and never walked out.',
 ]

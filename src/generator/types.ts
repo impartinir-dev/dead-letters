@@ -23,7 +23,7 @@ export interface LeftoverPayload {
   kind: 'leftovers'
   /** full leftover text in row-major order (core message + padding tail), uppercase, no spaces */
   message: string
-  /** the clue part of `message` (names the killer's role, or their name as a fallback) */
+  /** the clue part of `message` — names the killer's role, never their name */
   core: string
   /** which case-file blanks the player must fill */
   blanks: Array<'killer' | 'weapon' | 'location'>

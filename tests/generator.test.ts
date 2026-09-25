@@ -338,6 +338,12 @@ describe('suspects and clues', () => {
     if (p.kind === 'interrogation') expect(new Set(p.suspects.map((s) => s.speaker))).toEqual(cast)
   })
 
+  it('no word bank contains a cast member\'s role', () => {
+    for (const c of cases)
+      for (const s of c.suspects)
+        for (const w of c.words) expect(w.includes(squash(s.role)), `#${c.id} ${w}/${s.role}`).toBe(false)
+  })
+
   it.each(cases)('case #$id has no filler padding', (c) => {
     const text = clueTextOf(c)
     if (text === null) return
@@ -353,7 +359,7 @@ describe('suspects and clues', () => {
     },
   )
 
-  it('dead-letter cases point at a suspect by role rather than "IT WAS <NAME>"', () => {
+  it('dead-letter cases point at a suspect by role, never "IT WAS <NAME>"', () => {
     const dead = cases.filter((c) => c.payload.kind === 'leftovers')
     const byRole = dead.filter((c) => {
       const p = c.payload as Extract<CaseFile['payload'], { kind: 'leftovers' }>
@@ -375,13 +381,60 @@ describe('suspects and clues', () => {
   )
 })
 
+describe('writing variety', () => {
+  const themeById = new Map(THEMES.map((t) => [t.id, t]))
+  const escape = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+  const namesWord = (text: string, w: string) => new RegExp(`\\b${escape(w)}\\b`, 'i').test(text)
+  /** undo the {victim}/{first} fill so a case's flavor maps back to its template */
+  const templateOf = (c: CaseFile) =>
+    c.flavor.replaceAll(c.victim, '{victim}').replace(new RegExp(`\\b${c.victim.split(' ')[0]}\\b`, 'g'), '{first}')
+
+  it('every theme has 2–3 hand-written 2–3 sentence intros that give nothing away', () => {
+    for (const t of THEMES) {
+      expect(t.intros.length, t.id).toBeGreaterThanOrEqual(2)
+      expect(t.intros.length, t.id).toBeLessThanOrEqual(3)
+      for (const intro of t.intros) {
+        expect(intro, t.id).toContain('{victim}')
+        expect(intro.replace(/\{victim\}|\{first\}/g, ''), t.id).not.toMatch(/[{}]/)
+        const sentences = intro.split(/[.!?](?:\s|$)/).filter((s) => s.trim())
+        expect(sentences.length, intro).toBeGreaterThanOrEqual(2)
+        expect(sentences.length, intro).toBeLessThanOrEqual(3)
+        for (const w of [...t.rooms, ...t.weapons, ...t.suspects.map((s) => s.role)])
+          expect(namesWord(intro, w), `${t.id} intro names "${w}": ${intro}`).toBe(false)
+      }
+    }
+  })
+
+  it("every case's intro comes from its own theme", () => {
+    for (const c of cases) expect(themeById.get(c.themeId)!.intros, `#${c.id}`).toContain(templateOf(c))
+  })
+
+  it('no intro template is used for more than 10 cases', () => {
+    const uses = new Map<string, number>()
+    for (const c of cases) uses.set(templateOf(c), (uses.get(templateOf(c)) ?? 0) + 1)
+    const worst = Math.max(...uses.values())
+    expect(worst).toBeLessThanOrEqual(10)
+  })
+
+  it('no surname appears more than 4 times across all 150 cases', () => {
+    const uses = new Map<string, number>()
+    for (const c of cases)
+      for (const name of [c.victim, ...c.suspects.map((s) => s.name)]) {
+        const s = name.split(' ').slice(1).join(' ')
+        uses.set(s, (uses.get(s) ?? 0) + 1)
+      }
+    const over = [...uses].filter(([, n]) => n > 4)
+    expect(over).toEqual([])
+  })
+})
+
 describe('determinism', () => {
   it('regenerating a case produces identical output', () => {
     for (const id of [1, 44, 104, 150]) {
       const stored = cases.find((c) => c.id === id)!
       // note: title uniqueness handling may have salted the seed at gen time,
       // so compare solvability-critical fields, not full equality
-      const regen = generateCase(id, 0, new Set())
+      const regen = generateCase(id, 0)
       expect(regen).not.toBeNull()
       expect(regen!.volume).toBe(stored.volume)
       expect(regen!.mechanic).toBe(stored.mechanic)
