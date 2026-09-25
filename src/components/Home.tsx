@@ -124,10 +124,17 @@ export default function Home({ nav }: { nav: (h: string) => void }) {
       </section>
 
       <footer className="home-foot">
-        <button className="btn-ghost" onClick={() => nav('#/help')}>
-          How to play
-        </button>
-        <span className="dim">150 cases · new daily at midnight</span>
+        <div className="home-foot-row">
+          <button className="btn-ghost" onClick={() => nav('#/help')}>
+            How to play
+          </button>
+          <span className="dim">150 cases · new daily at midnight</span>
+        </div>
+        <nav className="legal-links" aria-label="Legal">
+          <a href="#/impressum">Impressum</a>
+          <span aria-hidden>·</span>
+          <a href="#/datenschutz">Datenschutz</a>
+        </nav>
       </footer>
     </div>
   )

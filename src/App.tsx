@@ -3,6 +3,8 @@ import Home from './components/Home'
 import CaseBrowser from './components/CaseBrowser'
 import CaseScreen from './components/CaseScreen'
 import HelpModal from './components/HelpModal'
+import { Impressum, Datenschutz } from './components/LegalPage'
+import { ConsentBanner } from './components/Ads'
 import { dailyCaseId } from './lib/daily'
 
 type Route =
@@ -10,6 +12,8 @@ type Route =
   | { name: 'cases'; vol: number }
   | { name: 'case'; id: number }
   | { name: 'help' }
+  | { name: 'impressum' }
+  | { name: 'datenschutz' }
 
 function parseHash(): Route {
   const h = location.hash.replace(/^#/, '') || '/'
@@ -25,6 +29,8 @@ function parseHash(): Route {
   }
   if (path === '/daily') return { name: 'case', id: dailyCaseId() }
   if (path === '/help') return { name: 'help' }
+  if (path === '/impressum') return { name: 'impressum' }
+  if (path === '/datenschutz') return { name: 'datenschutz' }
   return { name: 'home' }
 }
 
@@ -45,6 +51,15 @@ export default function App() {
     else location.hash = h
   }, [])
 
+  return (
+    <>
+      {renderRoute(route, nav)}
+      <ConsentBanner nav={nav} />
+    </>
+  )
+}
+
+function renderRoute(route: Route, nav: (h: string) => void) {
   switch (route.name) {
     case 'cases':
       return <CaseBrowser nav={nav} initialVol={route.vol} />
@@ -52,6 +67,10 @@ export default function App() {
       return <CaseScreen key={route.id} id={route.id} nav={nav} />
     case 'help':
       return <HelpModal nav={nav} />
+    case 'impressum':
+      return <Impressum nav={nav} />
+    case 'datenschutz':
+      return <Datenschutz nav={nav} />
     default:
       return <Home nav={nav} />
   }
