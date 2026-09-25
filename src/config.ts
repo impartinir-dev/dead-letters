@@ -22,7 +22,7 @@ export const STATS_API_URL: string =
  * Public link to the Tally contact form (Impressum "second contact channel").
  * Leave empty until the form exists — the Impressum then shows a placeholder.
  */
-export const CONTACT_FORM_URL: string = "";
+export const CONTACT_FORM_URL: string = "https://tally.so/r/aQVapZ";
 
 /**
  * Advertising. `enabled` is the single master switch: while it is false, no
