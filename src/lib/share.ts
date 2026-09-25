@@ -1,30 +1,37 @@
-import type { CaseFile } from '../generator/types'
 import { fmtTime } from './format'
 
-export function shareText(c: CaseFile, seconds: number, hints: number, wrong: number): string {
-  const chal = seconds <= 120 ? ' ⚡2-min challenge' : ''
-  return (
-    `DEAD LETTERS — Case No. ${c.id} "${c.title}"\n` +
-    `Solved in ${fmtTime(seconds)} · ${c.words.length}/${c.words.length} words · ` +
-    `${hints} hint${hints === 1 ? '' : 's'} · ${wrong} false accusation${wrong === 1 ? '' : 's'}${chal}\n` +
-    `Can you crack it faster?`
-  )
+export interface ShareResult {
+  caseId: number
+  /** daily case number, or null for an archive case */
+  daily: number | null
+  seconds: number
+  hints: number
+  wrong: number
 }
 
-export async function shareCase(c: CaseFile, seconds: number, hints: number, wrong: number): Promise<boolean> {
-  const text = shareText(c, seconds, hints, wrong)
-  try {
-    if (navigator.share) {
-      await navigator.share({ text })
-      return true
-    }
-  } catch {
-    /* user cancelled or unsupported — fall through to clipboard */
-  }
-  try {
-    await navigator.clipboard.writeText(text)
-    return true
-  } catch {
-    return false
-  }
+const plural = (n: number, word: string) => `${n} ${word}${n === 1 ? '' : 's'}`
+
+/**
+ * Five squares: green by default, a yellow per hint, a red per false
+ * accusation (greens first), plus ⚡ for a sub-2-minute solve.
+ */
+export function emojiRow(r: Pick<ShareResult, 'seconds' | 'hints' | 'wrong'>): string {
+  const reds = Math.min(5, r.wrong)
+  const yellows = Math.min(5 - reds, r.hints)
+  const row = '🟩'.repeat(5 - reds - yellows) + '🟨'.repeat(yellows) + '🟥'.repeat(reds)
+  return r.seconds <= 120 ? `${row} ⚡` : row
+}
+
+/**
+ * Spoiler-free, group-chat-ready result. Never includes the title, names,
+ * weapon, location or any answer — only the case number and how it went.
+ * `baseUrl` is the app URL without a hash (the daily link opens today's case).
+ */
+export function shareText(r: ShareResult, baseUrl: string): string {
+  const head = r.daily !== null ? `DEAD LETTERS #${r.daily} 🔍` : `DEAD LETTERS · Case No. ${r.caseId} 🔍`
+  const stats =
+    `Solved in ${fmtTime(r.seconds)} · ${plural(r.hints, 'hint')} · ` +
+    `${plural(r.wrong, 'false accusation')}`
+  const link = `${baseUrl}#/${r.daily !== null ? 'daily' : `case/${r.caseId}`}`
+  return `${head}\n${stats}\n${emojiRow(r)}\n${link}`
 }

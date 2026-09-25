@@ -3,7 +3,7 @@ import type { CaseFile } from '../generator/types'
 import { WORD_SEARCH_MECHANICS } from '../generator/types'
 import { loadCase } from '../lib/data'
 import { fmtTime, MECHANIC_LABEL } from '../lib/format'
-import { dailyCaseId } from '../lib/daily'
+import { dailyCaseId, dailyNumber } from '../lib/daily'
 import { recordSolve } from '../state/progress'
 import WordSearchMode from './modes/WordSearchMode'
 import CryptogramMode from './modes/CryptogramMode'
@@ -22,6 +22,8 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
   const [wrong, setWrong] = useState(0)
   const [solvedAt, setSolvedAt] = useState<number | null>(null)
   const [shakeWrong, setShakeWrong] = useState(false)
+  // decided once on open, so a solve that crosses midnight still counts for the day it started
+  const [daily] = useState(() => (id === dailyCaseId() ? dailyNumber() : null))
 
   // ---- timer (pauses when tab hidden) ----
   const startRef = useRef(0)
@@ -76,7 +78,7 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
     if (!c || solved) return
     const seconds = Math.max(1, Math.round(elapsed))
     setSolvedAt(seconds)
-    recordSolve(c.id, { seconds, hints: 3 - hintsLeft, wrong, challenge: seconds <= 120 }, c.id === dailyCaseId())
+    recordSolve(c.id, { seconds, hints: 3 - hintsLeft, wrong, challenge: seconds <= 120 }, daily !== null)
     if (navigator.vibrate) navigator.vibrate([30, 60, 30])
   }
 
@@ -100,11 +102,17 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
   return (
     <div className={`page case-page ${shakeWrong ? 'shake' : ''}`}>
       <header className="case-head">
-        <button className="btn-ghost" onClick={() => nav('#/cases')} aria-label="Back to case files">
+        <button
+          className="btn-ghost"
+          onClick={() => nav(daily !== null ? '#/' : '#/cases')}
+          aria-label={daily !== null ? 'Back to home' : 'Back to case files'}
+        >
           ←
         </button>
         <div className="case-head-title">
-          <span className="case-no">CASE No. {c.id}</span>
+          <span className="case-no">
+            {daily !== null ? `DAILY CASE #${daily} · ` : ''}CASE No. {c.id}
+          </span>
           <h2>{c.title}</h2>
         </div>
         <span className="timer-chip">{fmtTime(elapsed)}</span>
@@ -130,7 +138,7 @@ export default function CaseScreen({ id, nav }: { id: number; nav: (h: string) =
       </footer>
 
       {solved && (
-        <SolvedOverlay c={c} seconds={solvedAt} hints={3 - hintsLeft} wrong={wrong} nav={nav} />
+        <SolvedOverlay c={c} seconds={solvedAt} hints={3 - hintsLeft} wrong={wrong} daily={daily} nav={nav} />
       )}
     </div>
   )
