@@ -3,3 +3,6 @@ dist
 dev-dist
 *.local
 .DS_Store
+
+# wrangler local dev state (local D1 database, build cache)
+.wrangler
