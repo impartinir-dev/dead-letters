@@ -33,38 +33,83 @@ export const CRIME_FILLER = [
   'WITNESS', 'DETECTIVE', 'INQUEST', 'POISON', 'DAGGER', 'NOTEBOOK',
 ]
 
-/** Padding tails glued after the core leftover message (length >= 3). */
-export const PAD_WORDS = [
-  'CASECLOSED', 'THEEND', 'RESTINPEACE', 'MURDERMOSTFOUL', 'JUSTICEISSERVED',
-  'SIGNEDTHEDETECTIVE', 'FILEDANDBURIED', 'COLDCASE', 'GOODRIDDANCE',
-  'ANOTHERONEGONE', 'THEGAMEISUP', 'DEADTOFRIGHT', 'BOOKEM', 'QED',
-  'NOIR', 'AMEN', 'PAGETURNER', 'WHODUNIT', 'THIRTY',
+/**
+ * Theme-neutral in-world padding phrases (uppercase, spaces). Leftover
+ * messages are padded to an exact length with the theme's own phrases first,
+ * then these; the short ones (3–6 letters) let any remainder >= 3 be filled.
+ * None may name a room, weapon, trait, or suspect role.
+ */
+export const PAD_PHRASES = [
+  'SOMEONE LIED ABOUT THE TIME',
+  'THE CLOCK WAS WRONG',
+  'NOBODY LEFT THAT NIGHT',
+  'THE LIGHTS WENT OUT',
+  'CHECK THE ALIBIS',
+  'FOLLOW THE MONEY',
+  'THE WINDOW WAS OPEN',
+  'SOMEONE SAW IT',
+  'THE NOTE WAS FORGED',
+  'NOTHING ADDS UP',
+  'IT WAS NO ACCIDENT',
+  'NEVER LOOK BACK',
+  'NOT AN ACCIDENT',
+  'SOMEONE KNOWS',
+  'TRUST NO ONE',
+  'SAY NOTHING',
+  'CHECK AGAIN',
+  'STAY QUIET',
+  'ASK AROUND',
+  'TELL NO ONE',
+  'BURN THIS',
+  'WHO KNEW',
+  'LOOK CLOSER',
+  'READ IT AGAIN',
+  'KEEP DIGGING',
+  'TOO LATE',
+  'BEWARE',
+  'LISTEN',
+  'HURRY',
+  'WAIT',
+  'LOOK',
+  'HUSH',
+  'RUN',
 ]
 
-/** Confession phrases for the anagram mechanic (word arrays). */
+/**
+ * Confession cores for the anagram mechanic (word arrays). Every one names
+ * the killer or their role. {KILLER} {ROLE} {VICTIMFIRST} fill per case.
+ */
 export const CONFESSIONS: string[][] = [
-  ['I', 'DID', 'IT'],
-  ['IT', 'WAS', 'ME'],
-  ['I', 'AM', 'THE', 'KILLER'],
-  ['GUILTY', 'AS', 'CHARGED'],
-  ['I', 'CONFESS'],
-  ['YOU', 'CAUGHT', 'ME'],
-  ['I', 'KILLED', '{VICTIM}'],
-  ['THE', 'BUTLER', 'DID', 'IT'],
-  ['IT', 'WAS', 'ME', 'ALL', 'ALONG'],
+  ['I', 'KILLED', '{VICTIMFIRST}', 'SIGNED', '{KILLER}'],
+  ['I', 'AM', 'THE', '{ROLE}', 'AND', 'I', 'DID', 'IT'],
+  ['GUILTY', 'AS', 'CHARGED', 'YOURS', 'TRULY', '{KILLER}'],
+  ['IT', 'WAS', 'ME', '{KILLER}'],
+  ['YOU', 'CAUGHT', 'ME', 'I', 'AM', 'THE', '{ROLE}'],
+  ['{KILLER}', 'CONFESSES', 'TO', 'MURDER'],
+  ['NOBODY', 'SUSPECTED', 'THE', '{ROLE}'],
+  ['THE', '{ROLE}', 'DID', 'IT', 'I', 'CONFESS'],
 ]
 
-/** Padding tails for anagram phrases (word arrays; extend the confession). */
+/** Padding for anagram phrases (word arrays), used alongside theme phrases. */
 export const CONFESSION_PADS: string[][] = [
   ['FORGIVE', 'ME'],
   ['I', 'AM', 'SORRY'],
-  ['THE', 'END'],
-  ['AMEN'],
-  ['CASE', 'CLOSED'],
-  ['SIGNED', '{KILLER}'],
-  ['FOR', 'THE', '{MOTIVE}'],
-  ['AND', 'I', 'WOULD', 'DO', 'IT', 'AGAIN'],
   ['NO', 'REGRETS'],
+  ['AND', 'I', 'WOULD', 'DO', 'IT', 'AGAIN'],
+  ['IN', 'THE', '{LOCATION}'],
+  ['WITH', 'THE', '{WEAPON}'],
+  ['THEY', 'HAD', 'IT', 'COMING'],
+  ['I', 'HAD', 'NO', 'CHOICE'],
+  ['IT', 'HAD', 'TO', 'BE', 'DONE'],
+  ['TELL', 'NO', 'ONE'],
+  ['LET', 'ME', 'EXPLAIN'],
+  ['IT', 'IS', 'DONE'],
+  ['AT', 'LAST'],
+  ['SO', 'BE', 'IT'],
+  ['NO', 'MORE'],
+  ['I', 'LIED'],
+  ['ALAS'],
+  ['ADIEU'],
 ]
 
 /** Trait dimensions for the suspect-lineup mechanic. */
@@ -120,30 +165,24 @@ export const CLUE_TEXT: Record<TraitDim, Record<string, { msg: string; readable:
   },
 }
 
-/** Cipher-case plaintext phrases. {WEAPON}/{LOCATION}/{KILLER}/{VICTIM}/{MOTIVE} fill with case atoms (squashed, A-Z + spaces). */
+/**
+ * Cipher-case plaintext phrases — each points at the killer by {ROLE}, so the
+ * decoded note leads to an accusation. {WEAPON} {LOCATION} {ROLE} fill with
+ * case atoms (uppercase, spaces kept).
+ */
 export const CIPHER_PHRASES = [
-  'I DID IT FOR THE MONEY',
-  'MEET ME AT THE {LOCATION} AT MIDNIGHT',
-  'THE {WEAPON} IS HIDDEN IN THE {LOCATION}',
-  'BURN THIS LETTER AT ONCE',
-  'SHE KNEW TOO MUCH',
-  'THE WILL IS IN THE DESK DRAWER',
-  'NO ONE WILL EVER FIND HER',
-  'IT WAS ALWAYS ABOUT THE {MOTIVE}',
-  'I SAW EVERYTHING FROM THE {LOCATION}',
-  'THE SAFE CODE IS HER BIRTHDAY',
-  'ASK THE MAID WHAT SHE SAW',
-  'THE MONEY IS BURIED AT THE {LOCATION}',
-  'FOLLOW THE MONEY',
-  'CHECK THE LEDGER',
-  'IT WAS NEVER AN ACCIDENT',
-  'THE {WEAPON} TELLS THE TRUTH',
-  'DIG UP THE {LOCATION}',
-  'I REGRET NOTHING',
-  'MIDNIGHT AT THE {LOCATION}',
-  'THE {WEAPON} WAS MINE ALL ALONG',
-  'HE NEVER SHOULD HAVE OPENED THAT LETTER',
-  'FORGIVE ME FOR WHAT I DID AT THE {LOCATION}',
+  'ASK THE {ROLE} ABOUT THE {WEAPON}',
+  'THE {ROLE} WAS IN THE {LOCATION} AT MIDNIGHT',
+  'I SAW THE {ROLE} LEAVE THE {LOCATION}',
+  'NEVER TRUST THE {ROLE}',
+  'THE {ROLE} HID THE {WEAPON}',
+  'FOLLOW THE {ROLE}',
+  'THE {ROLE} LIED ABOUT THE TIME',
+  'THE {WEAPON} BELONGS TO THE {ROLE}',
+  'IT WAS THE {ROLE} ALL ALONG',
+  'THE {ROLE} KNOWS WHAT HAPPENED IN THE {LOCATION}',
+  'DO NOT LET THE {ROLE} NEAR THE {LOCATION} AGAIN',
+  'THE {ROLE} HAD BLOOD ON THEIR SLEEVE',
 ]
 
 /** Timeline-case events (lowercase clauses). */

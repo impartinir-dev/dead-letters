@@ -181,6 +181,7 @@ export function generateCase(
       grid,
       words,
       victim: atoms.victim,
+      suspects: atoms.suspects,
       killer: atoms.killer,
       weapon: atoms.weapon,
       location: atoms.location,

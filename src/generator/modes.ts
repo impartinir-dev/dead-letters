@@ -6,9 +6,7 @@
 import type { Rng } from './rng'
 import { pick, pickN, shuffle, int } from './rng'
 import type { Atoms } from './mechanics'
-import { squash, titleCase } from './mechanics'
 import {
-  FIRST_NAMES, SURNAMES,
   CIPHER_PHRASES, TIMELINE_EVENTS,
 } from './pools'
 import type { Theme } from './themes'
@@ -22,12 +20,13 @@ const low = (s: string) => s.toLowerCase()
 /* ================================ CIPHER ================================ */
 
 function fillAtoms(tpl: string, a: Atoms): string {
+  const up = (s: string) => s.toUpperCase().replace(/[^A-Z ]/g, '')
   return tpl
-    .replaceAll('{WEAPON}', squash(a.weapon))
-    .replaceAll('{LOCATION}', squash(a.location))
-    .replaceAll('{KILLER}', squash(a.killer))
-    .replaceAll('{VICTIM}', squash(a.victim))
-    .replaceAll('{MOTIVE}', squash(a.motive))
+    .replaceAll('{WEAPON}', up(a.weapon))
+    .replaceAll('{LOCATION}', up(a.location))
+    .replaceAll('{ROLE}', up(a.killerRole))
+    .replaceAll('{KILLER}', up(a.killer))
+    .replaceAll('{VICTIM}', up(a.victim))
 }
 
 export function buildCryptogram(rng: Rng, a: Atoms, vol: number): CryptogramPayload | null {
@@ -147,16 +146,7 @@ const clueText = (kind: DeductionClue['kind'], a: string, b?: string): string =>
 }
 
 export function buildDeduction(rng: Rng, a: Atoms, theme: Theme): DeductionPayload | null {
-  const suspects = shuffle(rng, [
-    a.killer,
-    ...pickN(
-      rng,
-      FIRST_NAMES.filter(
-        (f) => f !== a.killer.split(' ')[0] && f !== a.victim.split(' ')[0],
-      ),
-      3,
-    ).map((f) => titleCase(`${f} ${pick(rng, SURNAMES)}`)),
-  ])
+  const suspects = a.suspects.map((s) => s.name)
   const weapons = shuffle(rng, [a.weapon, ...pickN(rng, theme.weapons.filter((w) => w !== a.weapon), 3)])
   const locations = shuffle(rng, [a.location, ...pickN(rng, theme.rooms.filter((l) => l !== a.location), 3)])
 
@@ -268,12 +258,7 @@ const STMT_TEXT: Record<Statement['kind'], (s: string, x?: string) => string> = 
 }
 
 export function buildInterrogation(rng: Rng, a: Atoms): InterrogationPayload | null {
-  const others = pickN(
-    rng,
-    FIRST_NAMES.filter((f) => f !== a.killer.split(' ')[0] && f !== a.victim.split(' ')[0]),
-    3,
-  ).map((f) => titleCase(`${f} ${pick(rng, SURNAMES)}`))
-  const names = shuffle(rng, [a.killer, ...others])
+  const names = a.suspects.map((s) => s.name)
 
   // random perfect matching over the 4 suspects
   const s = shuffle(rng, names)

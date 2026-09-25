@@ -1,6 +1,6 @@
 import type { Rng } from './rng'
 import { pick, pickN, shuffle, chance } from './rng'
-import { fitMessage } from './message'
+import { fitMessage, exactFill, cleanMessage, squash } from './message'
 import {
   FIRST_NAMES, SURNAMES, MOTIVES,
   TRAIT_VALUES, CLUE_TEXT, ELIM_NOTES, ELIM_MESSAGES,
@@ -9,73 +9,123 @@ import {
 } from './pools'
 import type {
   Mechanic, Payload, LeftoverPayload, LineupPayload,
-  EliminationPayload, AnagramPayload, Suspect, ElimItem,
+  EliminationPayload, AnagramPayload, Suspect, ElimItem, CaseSuspect,
 } from './types'
 import type { Theme } from './themes'
 
 export interface Atoms {
   victim: string
+  /** the case's 4 suspects in display order; one of them is the killer */
+  suspects: CaseSuspect[]
   killer: string
+  /** the killer's role, e.g. "sommelier" */
+  killerRole: string
   weapon: string
   location: string
   motive: string
 }
 
-export const squash = (s: string) => s.toUpperCase().replace(/[^A-Z]/g, '')
+export { squash }
 export const titleCase = (s: string) =>
   s.toLowerCase().replace(/\b[a-z]/g, (ch) => ch.toUpperCase())
 
-/** Weapon and location are drawn only from the theme's own pools. */
+const firstName = (name: string) => name.split(' ')[0]
+
+/**
+ * Victim, 4-person cast (distinct first names and surnames, each with a theme
+ * role + hook), and the killer among them. Weapon and location come only from
+ * the theme's own pools.
+ */
 export function makeAtoms(rng: Rng, theme: Theme): Atoms {
-  const firsts = pickN(rng, FIRST_NAMES, 2)
-  const lasts = pickN(rng, SURNAMES, 2)
+  const firsts = pickN(rng, FIRST_NAMES, 5)
+  const lasts = pickN(rng, SURNAMES, 5)
+  const victim = titleCase(`${firsts[0]} ${lasts[0]}`)
+  const roles = pickN(rng, theme.suspects, 4)
+  const cast: CaseSuspect[] = roles.map((r, i) => ({
+    name: titleCase(`${firsts[i + 1]} ${lasts[i + 1]}`),
+    role: r.role,
+    hook: r.hook.replaceAll('{v}', firstName(victim)),
+  }))
+  const killer = cast[0]
   return {
-    victim: titleCase(`${firsts[0]} ${lasts[0]}`),
-    killer: titleCase(`${firsts[1]} ${lasts[1]}`),
+    victim,
+    suspects: shuffle(rng, cast),
+    killer: killer.name,
+    killerRole: killer.role,
     weapon: pick(rng, theme.weapons),
     location: pick(rng, theme.rooms),
     motive: titleCase(pick(rng, MOTIVES)),
   }
 }
 
+/**
+ * Squashed terms a message must not contain: every room, weapon, suspect role
+ * and suspect name/surname in the case — except the ones the clue itself is
+ * allowed to name (`keep`).
+ */
+export function forbiddenTerms(
+  a: Atoms, theme: Theme, keep: { killer?: boolean; weapon?: boolean; location?: boolean } = {},
+): string[] {
+  const out: string[] = []
+  for (const r of theme.rooms) if (!(keep.location && r === a.location)) out.push(squash(r))
+  for (const w of theme.weapons) if (!(keep.weapon && w === a.weapon)) out.push(squash(w))
+  for (const s of a.suspects) {
+    if (keep.killer && s.name === a.killer) continue
+    out.push(squash(s.role), squash(s.name), squash(s.name.split(' ').slice(1).join('')))
+  }
+  return out
+}
+
 /* ------------------------------ leftovers ------------------------------ */
 
 type Blank = 'killer' | 'weapon' | 'location'
 
-function leftoverCores(blanks: Blank[], a: Atoms): string[] {
-  const K = squash(a.killer), W = squash(a.weapon), L = squash(a.location), V = squash(a.victim)
+/**
+ * Clue cores point at the killer by role ("THE SOMMELIER DID IT") so the
+ * player has to match the clue against the cast. `byName` gives the plain
+ * "IT WAS <NAME>" fallbacks, used only when no role core fits.
+ */
+function leftoverCores(blanks: Blank[], a: Atoms, byName: boolean): string[] {
+  const K = byName ? squash(a.killer) : `THE${squash(a.killerRole)}`
+  const W = squash(a.weapon), L = squash(a.location)
   const has = (b: Blank) => blanks.includes(b)
+  if (byName) {
+    if (has('weapon') && has('location')) return [`ITWAS${K}WITHTHE${W}INTHE${L}`]
+    if (has('weapon')) return [`ITWAS${K}WITHTHE${W}`]
+    if (has('location')) return [`ITWAS${K}INTHE${L}`]
+    return [`ITWAS${K}`]
+  }
   if (has('weapon') && has('location'))
     return [
-      `ITWAS${K}WITHTHE${W}INTHE${L}`,
-      `${K}KILLED${V}WITHTHE${W}INTHE${L}`,
-      `THEKILLERIS${K}THEWEAPONWASTHE${W}THELOCATIONWASTHE${L}`,
-      `${K}INTHE${L}WITHTHE${W}`,
+      `${K}DIDITWITHTHE${W}INTHE${L}`,
+      `${K}USEDTHE${W}INTHE${L}`,
+      `INTHE${L}${K}USEDTHE${W}`,
     ]
   if (has('weapon'))
     return [
-      `ITWAS${K}WITHTHE${W}`,
       `${K}DIDITWITHTHE${W}`,
-      `THEKILLERIS${K}THEWEAPONWASTHE${W}`,
-      `THEWEAPONWASTHE${W}ANDTHEKILLERIS${K}`,
+      `${K}HIDTHE${W}`,
+      `THE${W}BELONGSTO${K}`,
     ]
   if (has('location'))
     return [
-      `ITWAS${K}INTHE${L}`,
+      `${K}STRUCKINTHE${L}`,
       `${K}DIDITINTHE${L}`,
-      `THEKILLERIS${K}THESCENEWASTHE${L}`,
+      `${K}WAITEDINTHE${L}`,
     ]
   return [
-    `THEKILLERIS${K}`,
-    `ITWAS${K}`,
     `${K}DIDIT`,
-    `MURDERER${K}`,
-    `THEMURDERERIS${K}`,
-    `ITWAS${K}ALLALONG`,
+    `ITWAS${K}`,
+    `NEVERTRUST${K}`,
+    `${K}ISLYING`,
+    `ARREST${K}`,
+    `FOLLOW${K}`,
   ]
 }
 
-function buildLeftovers(rng: Rng, L: number, messageCells: number[], a: Atoms): LeftoverPayload | null {
+function buildLeftovers(
+  rng: Rng, L: number, messageCells: number[], a: Atoms, theme: Theme,
+): LeftoverPayload | null {
   const canonical: Blank[][] = [
     ['killer', 'weapon', 'location'],
     ['killer', 'location'],
@@ -83,15 +133,23 @@ function buildLeftovers(rng: Rng, L: number, messageCells: number[], a: Atoms): 
     ['killer'],
   ]
   const order = chance(rng, 0.55) ? canonical : shuffle(rng, canonical)
-  for (const blanks of order) {
-    const message = fitMessage(rng, leftoverCores(blanks, a), L)
-    if (message) {
-      const ord: Record<Blank, number> = { killer: 0, weapon: 1, location: 2 }
-      return {
-        kind: 'leftovers',
-        message,
-        blanks: blanks.slice().sort((x, y) => ord[x] - ord[y]),
-        messageCells,
+  for (const byName of [false, true]) {
+    for (const blanks of order) {
+      const forbidden = forbiddenTerms(a, theme, {
+        killer: true,
+        weapon: blanks.includes('weapon'),
+        location: blanks.includes('location'),
+      })
+      const fit = fitMessage(rng, leftoverCores(blanks, a, byName), L, theme.phrases, forbidden)
+      if (fit) {
+        const ord: Record<Blank, number> = { killer: 0, weapon: 1, location: 2 }
+        return {
+          kind: 'leftovers',
+          message: fit.message,
+          core: fit.core,
+          blanks: blanks.slice().sort((x, y) => ord[x] - ord[y]),
+          messageCells,
+        }
       }
     }
   }
@@ -102,12 +160,17 @@ function buildLeftovers(rng: Rng, L: number, messageCells: number[], a: Atoms): 
 
 const DIMS = Object.keys(TRAIT_VALUES) as TraitDim[]
 
-function buildLineup(rng: Rng, L: number, messageCells: number[], a: Atoms): LineupPayload | null {
+function buildLineup(
+  rng: Rng, L: number, messageCells: number[], a: Atoms, theme: Theme,
+): LineupPayload | null {
   const dim = pick(rng, DIMS)
   const value = pick(rng, TRAIT_VALUES[dim])
   const clue = CLUE_TEXT[dim][value]
-  const message = fitMessage(rng, [clue.msg], L)
-  if (!message) return null
+  const others = TRAIT_VALUES[dim].filter((v) => v !== value)
+  // padding must not mention a competing trait value or anyone in the cast
+  const forbidden = [...forbiddenTerms(a, theme), ...others]
+  const fit = fitMessage(rng, [clue.msg], L, theme.phrases, forbidden)
+  if (!fit) return null
 
   const randTraits = (over: Partial<Suspect['traits']>): Suspect['traits'] => ({
     hair: pick(rng, TRAIT_VALUES.hair),
@@ -117,36 +180,19 @@ function buildLineup(rng: Rng, L: number, messageCells: number[], a: Atoms): Lin
     ...over,
   })
 
-  const taken = new Set([a.victim, a.killer])
-  const decoyNames: string[] = []
-  for (const f of shuffle(rng, FIRST_NAMES)) {
-    for (const s of shuffle(rng, SURNAMES)) {
-      const name = titleCase(`${f} ${s}`)
-      if (!taken.has(name) && !decoyNames.includes(name)) {
-        decoyNames.push(name)
-        break
-      }
-    }
-    if (decoyNames.length >= 3) break
-  }
-
-  const others = TRAIT_VALUES[dim].filter((v) => v !== value)
-  const suspects: Suspect[] = [
-    { name: a.killer, traits: randTraits({ [dim]: value }) },
-    ...decoyNames.map((name) => ({
-      name,
-      traits: randTraits({ [dim]: pick(rng, others) }),
-    })),
-  ]
+  const suspects: Suspect[] = a.suspects.map((s) => ({
+    name: s.name,
+    traits: randTraits({ [dim]: s.name === a.killer ? value : pick(rng, others) }),
+  }))
 
   // ensure no two suspects share an identical trait sheet (never touch clueDim)
   for (let i = 0; i < suspects.length; i++) {
     let guard = 0
     while (guard++ < 25) {
-      const others = new Set(
+      const rest = new Set(
         suspects.filter((_, j) => j !== i).map((s) => JSON.stringify(s.traits)),
       )
-      if (!others.has(JSON.stringify(suspects[i].traits))) break
+      if (!rest.has(JSON.stringify(suspects[i].traits))) break
       for (const d of DIMS)
         if (d !== dim) suspects[i].traits[d] = pick(rng, TRAIT_VALUES[d])
     }
@@ -154,11 +200,11 @@ function buildLineup(rng: Rng, L: number, messageCells: number[], a: Atoms): Lin
 
   return {
     kind: 'lineup',
-    message,
+    message: fit.message,
     clueText: clue.readable,
     clueDim: dim,
     clueValue: value,
-    suspects: shuffle(rng, suspects),
+    suspects,
     messageCells,
   }
 }
@@ -166,7 +212,7 @@ function buildLineup(rng: Rng, L: number, messageCells: number[], a: Atoms): Lin
 /* ----------------------------- elimination ----------------------------- */
 
 function elimItems(rng: Rng, answer: string, pool: string[], noteKind: keyof typeof ELIM_NOTES): ElimItem[] {
-  const decoys = pickN(rng, pool.filter((w) => squash(w) !== squash(answer)), 3).map(titleCase)
+  const decoys = pickN(rng, pool.filter((w) => squash(w) !== squash(answer)), 3)
   return shuffle(rng, [answer, ...decoys]).map((name) => ({
     name,
     cleared: name !== answer,
@@ -181,13 +227,10 @@ function buildElimination(
   rng: Rng, L: number, messageCells: number[], a: Atoms, words: string[], theme: Theme,
 ): EliminationPayload | null {
   if (words.length < 9) return null
-  const message = fitMessage(rng, ELIM_MESSAGES, L)
-  if (!message) return null
+  const fit = fitMessage(rng, ELIM_MESSAGES, L, theme.phrases, forbiddenTerms(a, theme))
+  if (!fit) return null
 
-  const suspectPool = pickN(rng, FIRST_NAMES, 20)
-    .map((f) => titleCase(`${f} ${pick(rng, SURNAMES)}`))
-    .filter((n) => squash(n) !== squash(a.victim))
-  const suspects = elimItems(rng, a.killer, suspectPool, 'suspect')
+  const suspects = elimItems(rng, a.killer, a.suspects.map((s) => s.name), 'suspect')
   const weapons = elimItems(rng, a.weapon, theme.weapons, 'weapon')
   const locations = elimItems(rng, a.location, theme.rooms, 'location')
 
@@ -200,46 +243,47 @@ function buildElimination(
   const ordered = shuffle(rng, wrong)
   const eliminations = ordered.map((e, i) => ({ ...e, word: words[i] }))
 
-  return { kind: 'elimination', suspects, weapons, locations, eliminations, message, messageCells }
+  return {
+    kind: 'elimination', suspects, weapons, locations, eliminations,
+    message: fit.message, messageCells,
+  }
 }
 
 /* ------------------------------ anagram -------------------------------- */
 
-function fillTpl(words: string[], a: Atoms): string[] {
-  return words.flatMap((w) => {
-    if (w === '{VICTIM}') return a.victim.split(' ').map(squash)
-    if (w === '{KILLER}') return a.killer.split(' ').map(squash)
-    if (w === '{MOTIVE}') return [squash(a.motive)]
+const toWords = (s: string) => s.toUpperCase().split(' ').map(squash).filter(Boolean)
+
+function fillTpl(tpl: string[], a: Atoms): string[] {
+  return tpl.flatMap((w) => {
+    if (w === '{KILLER}') return toWords(a.killer)
+    if (w === '{ROLE}') return toWords(a.killerRole)
+    if (w === '{VICTIMFIRST}') return toWords(firstName(a.victim))
+    if (w === '{WEAPON}') return toWords(a.weapon)
+    if (w === '{LOCATION}') return toWords(a.location)
     return [w]
   })
 }
 
-const letterCount = (words: string[]) => words.reduce((n, w) => n + w.length, 0)
+const letterCount = (ws: string[]) => ws.reduce((n, w) => n + w.length, 0)
 
-function buildAnagram(rng: Rng, L: number, messageCells: number[], a: Atoms): AnagramPayload | null {
+function buildAnagram(
+  rng: Rng, L: number, messageCells: number[], a: Atoms, theme: Theme,
+): AnagramPayload | null {
   if (L > 60) return null // beyond our padding capacity; caller adds decoys / repacks
+  const forbidden = forbiddenTerms(a, theme, { killer: true, weapon: true, location: true })
   for (const core of shuffle(rng, CONFESSIONS)) {
-    const words = fillTpl(core, a)
-    let rest = L - letterCount(words)
+    const coreWords = fillTpl(core, a)
+    const rest = L - letterCount(coreWords)
     if (rest < 0) continue
-    const pads = shuffle(rng, CONFESSION_PADS.map((p) => fillTpl(p, a)))
-    let guard = 0
-    while (rest > 0 && guard++ < 60) {
-      if (rest < 4) {
-        words.push('XYZ'.slice(0, rest))
-        rest = 0
-        break
-      }
-      const fits = pads.filter((p) => letterCount(p) <= rest)
-      if (!fits.length) break
-      const p = pick(rng, fits)
-      pads.splice(pads.indexOf(p), 1) // don't repeat a pad
-      words.push(...p)
-      rest -= letterCount(p)
-    }
-    if (rest !== 0) continue
-    const phrase = words.join(' ')
+    const pads = [
+      ...shuffle(rng, theme.phrases.map(toWords)),
+      ...shuffle(rng, CONFESSION_PADS.map((p) => fillTpl(p, a))),
+    ].filter((p) => cleanMessage(p.join(''), forbidden))
+    const fill = exactFill(rest, pads, letterCount)
+    if (!fill) continue
+    const phrase = [...coreWords, ...fill.flat()].join(' ')
     const squashed = phrase.replace(/ /g, '')
+    if (!cleanMessage(squashed, forbidden)) continue
     // tiles = scrambled squashed; ensure not identical to fill order
     let tiles = squashed
     for (let i = 0; i < 40 && tiles === squashed; i++)
@@ -263,11 +307,11 @@ export function buildPayload(
 ): BuiltPayload | null {
   switch (mechanic) {
     case 'leftovers': {
-      const p = buildLeftovers(rng, L, messageCells, a)
+      const p = buildLeftovers(rng, L, messageCells, a, theme)
       return p && { payload: p, fill: p.message }
     }
     case 'lineup': {
-      const p = buildLineup(rng, L, messageCells, a)
+      const p = buildLineup(rng, L, messageCells, a, theme)
       return p && { payload: p, fill: p.message }
     }
     case 'elimination': {
@@ -275,7 +319,7 @@ export function buildPayload(
       return p && { payload: p, fill: p.message }
     }
     case 'anagram': {
-      const p = buildAnagram(rng, L, messageCells, a)
+      const p = buildAnagram(rng, L, messageCells, a, theme)
       return p && { payload: p, fill: p.tiles }
     }
     default:

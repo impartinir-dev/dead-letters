@@ -4,7 +4,8 @@
  * `rooms` / `weapons` (4–6 each, Title Case, letters + spaces) are the only
  * locations and weapons a case of this theme may use — including decoys.
  * `keywords` are the theme's distinctive nouns: no case title may contain
- * another theme's keyword (enforced by tests).
+ * another theme's keyword (enforced by tests). `suspects` / `phrases` feed the
+ * case's cast and the leftover-message padding.
  */
 export interface Theme {
   id: string
@@ -13,6 +14,14 @@ export interface Theme {
   keywords: string[]
   rooms: string[]
   weapons: string[]
+  /**
+   * 6 suspect archetypes. `role` (lowercase, letters + spaces) is how clues
+   * refer to them ("THE SOMMELIER DID IT") and must appear in `hook`; `{v}` in
+   * a hook is replaced with the victim's first name.
+   */
+  suspects: Array<{ role: string; hook: string }>
+  /** in-world padding phrases for leftover messages (uppercase, spaces) */
+  phrases: string[]
   words: string[]
 }
 
@@ -24,6 +33,19 @@ export const THEMES: Theme[] = [
     keywords: ['Winery', 'Vineyard', 'Merlot', 'Vintage'],
     rooms: ['Wine Cellar', 'Tasting Room', 'Barrel Room', 'Vineyard', 'Press House'],
     weapons: ['Corkscrew', 'Wine Bottle', 'Pruning Knife', 'Barrel Stave', 'Poisoned Glass'],
+    suspects: [
+      { role: 'sommelier', hook: 'the sommelier {v} publicly humiliated' },
+      { role: 'heir', hook: 'the estranged heir to the estate' },
+      { role: 'cellarmaster', hook: 'the cellarmaster caught watering the wine' },
+      { role: 'picker', hook: 'a grape picker owed three months of wages' },
+      { role: 'critic', hook: 'the wine critic {v} was suing for libel' },
+      { role: 'vintner', hook: 'the rival vintner from across the valley' },
+    ],
+    phrases: [
+      'THE VATS WERE STILL WARM',
+      'SOMEONE MOVED THE CASKS',
+      'THE LABELS WERE SWAPPED',
+    ],
     words: [
       'AGED', 'AROMA', 'BARREL', 'BOTTLED', 'BUNG', 'CASK', 'CELLAR',
       'CHARDONNAY', 'CORK', 'DREGS', 'DRY', 'ESTATE', 'FERMENT', 'GRAPE',
@@ -37,6 +59,19 @@ export const THEMES: Theme[] = [
     keywords: ['Jazz', 'Blue Note', 'Swing', 'Bebop'],
     rooms: ['Green Room', 'Bandstand', 'Back Bar', 'Coat Check', 'Stage Door Alley'],
     weapons: ['Trumpet', 'Mic Stand', 'Piano Wire', 'Drumstick', 'Poisoned Martini'],
+    suspects: [
+      { role: 'saxophonist', hook: 'the saxophonist {v} fired mid-set' },
+      { role: 'singer', hook: 'the torch singer with a buried past' },
+      { role: 'bartender', hook: 'the bartender who waters down the gin' },
+      { role: 'owner', hook: 'the club owner in debt to the mob' },
+      { role: 'drummer', hook: 'the drummer {v} was about to replace' },
+      { role: 'promoter', hook: 'the promoter who skimmed the door money' },
+    ],
+    phrases: [
+      'THE BAND NEVER STOPPED',
+      'THE LAST SONG WAS CUT SHORT',
+      'THE ENCORE WAS CANCELLED',
+    ],
     words: [
       'BASS', 'BRASS', 'CHORDS', 'DRUMS', 'ENCORE', 'IMPROV', 'LOUNGE',
       'RHYTHM', 'SAXOPHONE', 'SMOKE', 'SOLO', 'STAGE', 'STANDARDS',
@@ -50,6 +85,19 @@ export const THEMES: Theme[] = [
     keywords: ['Ski', 'Slopes', 'Avalanche', 'Black Diamond'],
     rooms: ['Chairlift', 'Sauna', 'Boot Room', 'Fireside Lounge', 'Ski Patrol Hut'],
     weapons: ['Ski Pole', 'Ice Axe', 'Snow Shovel', 'Crampon', 'Poisoned Thermos'],
+    suspects: [
+      { role: 'instructor', hook: 'the ski instructor {v} reported' },
+      { role: 'patroller', hook: 'the ski patroller who lied about the storm' },
+      { role: 'heir', hook: 'the heir who flew in the night before' },
+      { role: 'chef', hook: 'the lodge chef {v} was about to fire' },
+      { role: 'snowboarder', hook: 'the champion snowboarder with a grudge' },
+      { role: 'innkeeper', hook: 'the innkeeper hiding a second set of books' },
+    ],
+    phrases: [
+      'THE TRACKS LED UPHILL',
+      'THE LIFT STOPPED AT TEN',
+      'SNOW COVERED THE PRINTS',
+    ],
     words: [
       'AVALANCHE', 'BINDINGS', 'CHALET', 'CHAIRLIFT', 'FROST', 'GONDOLA',
       'LODGE', 'MOGULS', 'POWDER', 'SKIING', 'SLOPE', 'SNOWBOUND',
@@ -63,6 +111,19 @@ export const THEMES: Theme[] = [
     keywords: ['Aquarium', 'Fishes', 'Shark Tank'],
     rooms: ['Shark Tank', 'Touch Pool', 'Wet Lab', 'Pump Room', 'Penguin House'],
     weapons: ['Harpoon', 'Scuba Tank', 'Dive Knife', 'Gaff Hook', 'Jellyfish Venom'],
+    suspects: [
+      { role: 'diver', hook: 'the diver {v} blamed for the accident' },
+      { role: 'keeper', hook: 'the penguin keeper passed over for promotion' },
+      { role: 'biologist', hook: 'the marine biologist whose research {v} stole' },
+      { role: 'donor', hook: 'the donor threatening to pull funding' },
+      { role: 'janitor', hook: 'the night janitor with a key to every tank' },
+      { role: 'trainer', hook: 'the sea lion trainer {v} had fired' },
+    ],
+    phrases: [
+      'THE PUMPS WERE SHUT OFF',
+      'THE GLASS WAS CRACKED',
+      'THE FEEDING RAN LATE',
+    ],
     words: [
       'AQUATIC', 'CORAL', 'DIVER', 'FIN', 'GILL', 'JELLYFISH', 'KELP',
       'OCTOPUS', 'PENGUIN', 'REEF', 'SHARK', 'STINGRAY', 'TANK', 'TIDAL',
@@ -76,6 +137,19 @@ export const THEMES: Theme[] = [
     keywords: ['Bakery', 'Sourdough', 'Recipe', 'Half-Baked', 'Crumb'],
     rooms: ['Bakehouse', 'Cold Room', 'Flour Store', 'Shopfront', 'Pantry'],
     weapons: ['Rolling Pin', 'Bread Knife', 'Dough Hook', 'Baking Tray', 'Poisoned Eclair'],
+    suspects: [
+      { role: 'apprentice', hook: 'the apprentice who was never paid on time' },
+      { role: 'rival', hook: 'the rival baker from across the street' },
+      { role: 'landlord', hook: 'the landlord trying to force {v} out' },
+      { role: 'critic', hook: 'the food critic who gave one star' },
+      { role: 'supplier', hook: 'the flour supplier owed a small fortune' },
+      { role: 'partner', hook: 'the partner cut out of the family recipe' },
+    ],
+    phrases: [
+      'THE OVEN WAS STILL HOT',
+      'FLOUR ON THE DOOR HANDLE',
+      'THE BREAD NEVER ROSE',
+    ],
     words: [
       'BAGUETTE', 'BUTTER', 'CRUMB', 'DOUGH', 'FLOUR', 'GLAZE', 'ICING',
       'KNEAD', 'LOAF', 'OVEN', 'PASTRY', 'PROOF', 'RYE', 'SCONE',
@@ -89,6 +163,19 @@ export const THEMES: Theme[] = [
     keywords: ['Film', 'on the Set', 'Final Take', 'Camera', 'Stunt'],
     rooms: ['Soundstage', 'Star Trailer', 'Editing Bay', 'Prop Room', 'Lighting Rig'],
     weapons: ['Prop Revolver', 'Boom Pole', 'Stage Light', 'Clapperboard', 'Power Cable'],
+    suspects: [
+      { role: 'director', hook: 'the director {v} was about to replace' },
+      { role: 'double', hook: 'the stunt double who never got credit' },
+      { role: 'producer', hook: 'the producer drowning in overruns' },
+      { role: 'understudy', hook: 'the understudy waiting for a big break' },
+      { role: 'screenwriter', hook: 'the screenwriter whose script {v} rewrote' },
+      { role: 'gaffer', hook: 'the gaffer who rigged every light' },
+    ],
+    phrases: [
+      'THE CAMERA WAS ROLLING',
+      'THE SCRIPT WAS CHANGED',
+      'CHECK THE DAILIES',
+    ],
     words: [
       'ACTOR', 'CAMERA', 'CASTING', 'CLAPPER', 'CUT', 'DIRECTOR',
       'EXTRAS', 'LIGHTING', 'REEL', 'SCENE', 'SCRIPT', 'SOUND', 'TAKE',
@@ -102,6 +189,19 @@ export const THEMES: Theme[] = [
     keywords: ['Cruise', 'High Seas', 'Voyage', 'Overboard', 'Captain'],
     rooms: ['Stateroom', 'Engine Room', 'Promenade Deck', 'Ballroom', 'Lifeboat'],
     weapons: ['Flare Gun', 'Anchor Chain', 'Steak Knife', 'Champagne Bottle', 'Life Ring'],
+    suspects: [
+      { role: 'purser', hook: 'the purser with a gambling problem' },
+      { role: 'steward', hook: 'the cabin steward {v} accused of theft' },
+      { role: 'captain', hook: 'the captain covering up a collision' },
+      { role: 'heir', hook: "the heir sharing {v}'s cabin" },
+      { role: 'entertainer', hook: "the ship's entertainer {v} heckled nightly" },
+      { role: 'stowaway', hook: 'the stowaway nobody can account for' },
+    ],
+    phrases: [
+      'THE SHIP NEVER SLOWED',
+      'SOMEONE WENT OVERBOARD',
+      'CHECK THE MANIFEST',
+    ],
     words: [
       'ANCHOR', 'BUFFET', 'CABIN', 'CAPTAIN', 'DECK', 'HARBOR',
       'LIFEBOAT', 'PORTHOLE', 'STARBOARD', 'STATEROOM', 'VOYAGE',
@@ -115,6 +215,19 @@ export const THEMES: Theme[] = [
     keywords: ['Library', 'Stacks', 'Overdue', 'Chapter'],
     rooms: ['Reading Room', 'Rare Book Room', 'Stacks', 'Archive', 'Map Room'],
     weapons: ['Letter Opener', 'Bookend', 'Heavy Atlas', 'Paper Cutter', 'Brass Lamp'],
+    suspects: [
+      { role: 'librarian', hook: 'the head librarian {v} was auditing' },
+      { role: 'archivist', hook: 'the archivist hiding a missing manuscript' },
+      { role: 'author', hook: 'the author {v} accused of plagiarism' },
+      { role: 'collector', hook: 'the rare book collector desperate for one title' },
+      { role: 'student', hook: 'the graduate student who never goes home' },
+      { role: 'custodian', hook: 'the night custodian with keys to every room' },
+    ],
+    phrases: [
+      'CHECK THE LOAN RECORDS',
+      'A PAGE WAS TORN OUT',
+      'THE LIGHTS STAYED ON',
+    ],
     words: [
       'ARCHIVE', 'AUTHOR', 'CATALOG', 'CHAPTER', 'DUE', 'INDEX',
       'LIBRARIAN', 'NOVEL', 'PAGE', 'QUIET', 'READER', 'SHELF',
@@ -128,6 +241,19 @@ export const THEMES: Theme[] = [
     keywords: ['Circus', 'Big Top', 'Trapeze', 'Ringmaster', 'Clues'],
     rooms: ['Big Top', 'Lion Cage', 'Wardrobe Wagon', 'Ticket Booth', 'Trapeze Rig'],
     weapons: ['Juggling Pin', 'Whip', 'Tent Stake', 'Throwing Knife', 'Trapeze Bar'],
+    suspects: [
+      { role: 'ringmaster', hook: 'the ringmaster who owes {v} money' },
+      { role: 'clown', hook: 'the sad clown {v} mocked in front of the troupe' },
+      { role: 'acrobat', hook: 'the acrobat whose net was cut last season' },
+      { role: 'tamer', hook: 'the lion tamer {v} was about to replace' },
+      { role: 'juggler', hook: 'the juggler with a record under another name' },
+      { role: 'strongman', hook: "the strongman who wanted {v}'s billing" },
+    ],
+    phrases: [
+      'THE NET WAS CUT',
+      'THE ANIMALS WERE RESTLESS',
+      'THE SHOW WENT ON',
+    ],
     words: [
       'ACROBAT', 'BIGTOP', 'CLOWN', 'JUGGLER', 'LION', 'PARADE',
       'RINGMASTER', 'STILTS', 'TENT', 'TRAPEZE', 'UNICYCLE', 'CANNON',
@@ -141,6 +267,19 @@ export const THEMES: Theme[] = [
     keywords: ['Golf', 'Hole in One', 'the Green', 'Fore', 'Back Nine'],
     rooms: ['Clubhouse', 'Pro Shop', 'Locker Room', 'Bunker', 'Cart Barn'],
     weapons: ['Nine Iron', 'Putter', 'Driver', 'Trophy', 'Flagstick'],
+    suspects: [
+      { role: 'caddie', hook: 'the caddie {v} never tipped' },
+      { role: 'groundskeeper', hook: 'the groundskeeper fired for ruining the greens' },
+      { role: 'champion', hook: 'the club champion {v} accused of cheating' },
+      { role: 'treasurer', hook: 'the treasurer with a hole in the accounts' },
+      { role: 'partner', hook: 'the playing partner who lost a fortune on a bet' },
+      { role: 'developer', hook: 'the developer trying to buy the course' },
+    ],
+    phrases: [
+      'CHECK THE SCORECARD',
+      'THE FLAG WAS MOVED',
+      'FOOTPRINTS IN THE SAND',
+    ],
     words: [
       'BOGEY', 'BUNKER', 'CADDIE', 'CART', 'DRIVER', 'FAIRWAY', 'GREEN',
       'HOLE', 'IRON', 'PAR', 'PUTTER', 'ROUGH', 'TEE', 'DIVOT', 'CLUBHOUSE',
@@ -153,6 +292,19 @@ export const THEMES: Theme[] = [
     keywords: ['Casino', 'House Always Wins', 'Dead Hand', 'Snake Eyes', 'All In'],
     rooms: ['Vault', 'High Roller Suite', 'Cashier Cage', 'Card Room', 'Counting Room'],
     weapons: ['Croupier Rake', 'Dealing Shoe', 'Derringer', 'Champagne Bottle', 'Poisoned Cocktail'],
+    suspects: [
+      { role: 'dealer', hook: 'the blackjack dealer {v} caught colluding' },
+      { role: 'bouncer', hook: 'the bouncer who threw {v} out once too often' },
+      { role: 'owner', hook: 'the casino owner {v} was blackmailing' },
+      { role: 'loan shark', hook: "the loan shark holding {v}'s markers" },
+      { role: 'card sharp', hook: 'the card sharp banned from every table' },
+      { role: 'manager', hook: 'the floor manager skimming the count' },
+    ],
+    phrases: [
+      'THE CAMERAS WENT DARK',
+      'THE DECK WAS STACKED',
+      'COUNT THE CHIPS AGAIN',
+    ],
     words: [
       'BET', 'BLACKJACK', 'CHIPS', 'CROUPIER', 'DEALER', 'DICE',
       'JACKPOT', 'POKER', 'ROULETTE', 'SHUFFLE', 'SLOTS', 'WAGER',
@@ -166,6 +318,19 @@ export const THEMES: Theme[] = [
     keywords: ['Theater', 'Matinee', 'Curtain Call', 'Break a Leg', 'Final Act'],
     rooms: ['Dressing Room', 'Orchestra Pit', 'Fly Loft', 'Balcony', 'Box Office'],
     weapons: ['Sandbag', 'Prop Sword', 'Counterweight', 'Curtain Rope', 'Spotlight'],
+    suspects: [
+      { role: 'understudy', hook: 'the understudy who knew every line' },
+      { role: 'director', hook: 'the director {v} humiliated at rehearsal' },
+      { role: 'stagehand', hook: 'the stagehand who works the fly ropes' },
+      { role: 'critic', hook: 'the critic {v} threatened to sue' },
+      { role: 'producer', hook: 'the producer about to close the show' },
+      { role: 'designer', hook: 'the costume designer {v} fired twice' },
+    ],
+    phrases: [
+      'THE CURTAIN ROSE LATE',
+      'SOMEONE MISSED A CUE',
+      'THE LIGHTS FLICKERED',
+    ],
     words: [
       'ACT', 'AISLE', 'APPLAUSE', 'BALCONY', 'CURTAIN', 'INTERMISSION',
       'MATINEE', 'PLAYBILL', 'REHEARSAL', 'SPOTLIGHT', 'STAGE', 'USHER',
@@ -179,6 +344,19 @@ export const THEMES: Theme[] = [
     keywords: ['Museum', 'Priceless', 'Curator'],
     rooms: ['Egyptian Wing', 'Dinosaur Hall', 'Storage Vault', 'Restoration Lab', 'Gift Shop'],
     weapons: ['Ceremonial Dagger', 'Marble Bust', 'Stone Axe', 'Bronze Statuette', 'Spear'],
+    suspects: [
+      { role: 'curator', hook: 'the curator {v} caught forging labels' },
+      { role: 'guard', hook: 'the night guard who slept through the alarm' },
+      { role: 'restorer', hook: 'the restorer who swapped a painting' },
+      { role: 'donor', hook: 'the donor demanding the collection back' },
+      { role: 'professor', hook: 'the professor denied access to the archives' },
+      { role: 'intern', hook: 'the intern who knows the vault code' },
+    ],
+    phrases: [
+      'THE ALARM NEVER SOUNDED',
+      'THE LABEL WAS FORGED',
+      'A CASE WAS LEFT OPEN',
+    ],
     words: [
       'ARTIFACT', 'CURATOR', 'EXHIBIT', 'FOSSIL', 'GALLERY', 'MARBLE',
       'MUMMY', 'PAINTING', 'RELIC', 'SCULPTURE', 'TICKET', 'TOUR',
@@ -192,6 +370,19 @@ export const THEMES: Theme[] = [
     keywords: ['Farm', 'Harvest', 'Wheat', 'Barn', 'Scarecrow'],
     rooms: ['Hayloft', 'Milking Shed', 'Silo', 'Tool Shed', 'Root Cellar'],
     weapons: ['Pitchfork', 'Scythe', 'Shovel', 'Rat Poison', 'Branding Iron'],
+    suspects: [
+      { role: 'farmhand', hook: 'the farmhand {v} refused to pay' },
+      { role: 'neighbor', hook: 'the neighbor fighting over the boundary fence' },
+      { role: 'heir', hook: 'the heir who wants to sell to developers' },
+      { role: 'veterinarian', hook: 'the veterinarian who signed false papers' },
+      { role: 'auctioneer', hook: 'the livestock auctioneer {v} undercut' },
+      { role: 'drifter', hook: 'the drifter sleeping in the hay' },
+    ],
+    phrases: [
+      'THE DOGS DID NOT BARK',
+      'TRACKS IN THE MUD',
+      'THE GATE WAS LEFT OPEN',
+    ],
     words: [
       'BARN', 'CATTLE', 'CROPS', 'HARVEST', 'HAY', 'LOAM', 'ORCHARD',
       'PLOW', 'SCYTHE', 'STABLE', 'TRACTOR', 'WHEAT', 'SILO', 'GRAIN',
@@ -205,6 +396,19 @@ export const THEMES: Theme[] = [
     keywords: ['Lighthouse', 'Beacon', 'Keeper', 'A Light Went Out'],
     rooms: ['Lamp Room', 'Spiral Stair', 'Keeper Cottage', 'Boathouse', 'Oil Store'],
     weapons: ['Boat Hook', 'Kerosene Lamp', 'Spyglass', 'Pipe Wrench', 'Anchor'],
+    suspects: [
+      { role: 'keeper', hook: 'the assistant keeper {v} was about to report' },
+      { role: 'fisherman', hook: 'the fisherman whose boat was wrecked on the rocks' },
+      { role: 'inspector', hook: 'the coast guard inspector with a hidden agenda' },
+      { role: 'smuggler', hook: 'the smuggler who needed the light to go dark' },
+      { role: 'painter', hook: 'the painter renting the spare room' },
+      { role: 'postmaster', hook: "the postmaster who reads everyone's mail" },
+    ],
+    phrases: [
+      'THE LIGHT WENT DARK',
+      'THE LOGBOOK IS WRONG',
+      'NO BOAT CAME IN',
+    ],
     words: [
       'BEACON', 'COAST', 'FOG', 'HORN', 'KEROSENE', 'LAMP', 'LENS',
       'ROCKS', 'SHORE', 'SPIRAL', 'WAVES', 'GALLEY', 'KEEPER', 'STORM',
@@ -218,6 +422,19 @@ export const THEMES: Theme[] = [
     keywords: ['Hotel', 'Room 313', 'Do Not Disturb', 'Checkout', 'Porter'],
     rooms: ['Penthouse', 'Lobby', 'Laundry', 'Elevator', 'Ballroom'],
     weapons: ['Ice Bucket', 'Curtain Cord', 'Pillow', 'Champagne Bottle', 'Hair Dryer'],
+    suspects: [
+      { role: 'concierge', hook: 'the concierge who knows every secret in the building' },
+      { role: 'bellhop', hook: 'the bellhop {v} accused of theft' },
+      { role: 'housekeeper', hook: 'the housekeeper who found the body' },
+      { role: 'manager', hook: 'the manager hiding a failed inspection' },
+      { role: 'guest', hook: 'the guest in the room next door' },
+      { role: 'valet', hook: "the valet who had {v}'s car keys" },
+    ],
+    phrases: [
+      'THE KEY WAS COPIED',
+      'THE DOOR WAS CHAINED',
+      'ROOM SERVICE CAME LATE',
+    ],
     words: [
       'BELLHOP', 'CONCIERGE', 'ELEVATOR', 'KEY', 'LOBBY', 'LUGGAGE',
       'MAID', 'MINIBAR', 'PORTER', 'SUITE', 'TOWEL', 'VALET',
@@ -231,6 +448,19 @@ export const THEMES: Theme[] = [
     keywords: ['Carnival', 'Midway', 'Ferris Wheel', 'Step Right Up'],
     rooms: ['Ferris Wheel', 'Carousel', 'Ghost Train', 'Ticket Booth', 'Games Tent'],
     weapons: ['Mallet', 'Dart', 'Tent Pole', 'Candy Apple', 'Balloon Pump'],
+    suspects: [
+      { role: 'barker', hook: 'the barker {v} replaced with a recording' },
+      { role: 'operator', hook: 'the ride operator who skipped the safety checks' },
+      { role: 'fortune teller', hook: "the fortune teller who predicted {v}'s death" },
+      { role: 'owner', hook: 'the carnival owner drowning in debt' },
+      { role: 'clown', hook: 'the clown with a second, secret act' },
+      { role: 'mechanic', hook: 'the mechanic who knows every bolt on the wheel' },
+    ],
+    phrases: [
+      'THE RIDE STOPPED AT THE TOP',
+      'THE GAME WAS RIGGED',
+      'THE MUSIC KEPT PLAYING',
+    ],
     words: [
       'BALLOON', 'CAROUSEL', 'COTTONCANDY', 'FERRIS', 'GAMES', 'MIDWAY',
       'POPCORN', 'PRIZE', 'RIDE', 'TICKET', 'BARKER', 'FUNHOUSE',
@@ -244,6 +474,19 @@ export const THEMES: Theme[] = [
     keywords: ['Train', 'Express', 'Sleeper Car', 'Last Stop', 'Next Stop'],
     rooms: ['Sleeper Car', 'Dining Car', 'Baggage Car', 'Observation Car', 'Caboose'],
     weapons: ['Coal Shovel', 'Lantern', 'Railroad Spike', 'Sleeping Draught', 'Steak Knife'],
+    suspects: [
+      { role: 'conductor', hook: 'the conductor {v} reported for drinking' },
+      { role: 'porter', hook: 'the porter who saw everything' },
+      { role: 'aristocrat', hook: 'the aristocrat traveling under a false name' },
+      { role: 'doctor', hook: 'the doctor who pronounced {v} dead too quickly' },
+      { role: 'secretary', hook: "the secretary left out of {v}'s will" },
+      { role: 'salesperson', hook: 'the traveling salesperson with an empty sample case' },
+    ],
+    phrases: [
+      'THE TRAIN NEVER STOPPED',
+      'THE CLOCKS DISAGREE',
+      'CHECK THE TICKETS',
+    ],
     words: [
       'BERTH', 'BOXCAR', 'CONDUCTOR', 'ENGINE', 'PLATFORM', 'RAIL',
       'SLEEPER', 'TICKET', 'TRACK', 'TUNNEL', 'WHISTLE', 'CABOOSE',
@@ -257,6 +500,19 @@ export const THEMES: Theme[] = [
     keywords: ['Courtroom', 'Court', 'Witness', 'Closing Argument'],
     rooms: ['Chambers', 'Jury Room', 'Holding Cell', 'Records Room', 'Witness Stand'],
     weapons: ['Gavel', 'Fountain Pen', 'Law Book', 'Nightstick', 'Brass Scales'],
+    suspects: [
+      { role: 'prosecutor', hook: 'the prosecutor {v} was about to expose' },
+      { role: 'defendant', hook: 'the defendant facing a life sentence' },
+      { role: 'juror', hook: 'the juror who took a bribe' },
+      { role: 'bailiff', hook: 'the bailiff who guards the evidence locker' },
+      { role: 'stenographer', hook: 'the stenographer who altered the transcript' },
+      { role: 'clerk', hook: 'the court clerk with gambling debts' },
+    ],
+    phrases: [
+      'THE TESTIMONY CHANGED',
+      'CHECK THE TRANSCRIPT',
+      'THE EXHIBIT WAS SWAPPED',
+    ],
     words: [
       'ALIBI', 'BAILIFF', 'DEFENSE', 'EVIDENCE', 'GAVEL', 'JUDGE',
       'JURY', 'OATH', 'OBJECTION', 'VERDICT', 'WITNESS', 'DOCKET',
@@ -270,6 +526,19 @@ export const THEMES: Theme[] = [
     keywords: ['Newsroom', 'Presses', 'Deadline', 'Front Page', 'Edition'],
     rooms: ['Press Room', 'Darkroom', 'Morgue', 'Corner Office', 'Mailroom'],
     weapons: ['Typewriter', 'Paper Spike', 'Letter Opener', 'Printing Plate', 'Poisoned Coffee'],
+    suspects: [
+      { role: 'editor', hook: "the editor who spiked {v}'s last story" },
+      { role: 'reporter', hook: 'the rival reporter chasing the same scoop' },
+      { role: 'photographer', hook: 'the photographer with negatives nobody has seen' },
+      { role: 'publisher', hook: 'the publisher facing a libel suit' },
+      { role: 'runner', hook: 'the copy runner who overheard everything' },
+      { role: 'columnist', hook: 'the gossip columnist {v} ruined' },
+    ],
+    phrases: [
+      'CHECK THE FIRST EDITION',
+      'THE STORY WAS KILLED',
+      'THE PRESSES KEPT RUNNING',
+    ],
     words: [
       'COLUMN', 'DEADLINE', 'EDITOR', 'HEADLINE', 'INK', 'LEAD',
       'PRESS', 'PRINT', 'SOURCE', 'TYPESET', 'BYLINE', 'COPYBOY',
@@ -283,6 +552,19 @@ export const THEMES: Theme[] = [
     keywords: ['Hospital', 'Code Blue', 'Fatal Dose', 'Visiting Hours', 'Do No Harm'],
     rooms: ['Operating Room', 'Morgue', 'Pharmacy', 'Supply Closet', 'Recovery Ward'],
     weapons: ['Scalpel', 'Syringe', 'Oxygen Tank', 'Bone Saw', 'Stethoscope'],
+    suspects: [
+      { role: 'surgeon', hook: 'the surgeon {v} reported for malpractice' },
+      { role: 'nurse', hook: 'the night nurse with access to the drug cabinet' },
+      { role: 'orderly', hook: 'the orderly who moves the bodies' },
+      { role: 'administrator', hook: 'the administrator covering up a scandal' },
+      { role: 'resident', hook: 'the resident {v} failed on rounds' },
+      { role: 'pharmacist', hook: 'the pharmacist short on inventory' },
+    ],
+    phrases: [
+      'CHECK THE CHART',
+      'THE DOSE WAS DOUBLED',
+      'THE MONITOR WAS SILENCED',
+    ],
     words: [
       'CLINIC', 'DOSE', 'NURSE', 'PATIENT', 'SCALPEL', 'SURGEON',
       'SUTURE', 'THERAPY', 'VITALS', 'WARD', 'XRAY', 'GURNEY',
@@ -296,6 +578,19 @@ export const THEMES: Theme[] = [
     keywords: ['Campground', 'Campfire', 'Camp', 'Ghost Stories'],
     rooms: ['Boathouse', 'Mess Hall', 'Ranger Station', 'Fire Pit', 'Bunk Cabin'],
     weapons: ['Hatchet', 'Canoe Paddle', 'Hunting Knife', 'Tent Stake', 'Poison Berries'],
+    suspects: [
+      { role: 'counselor', hook: 'the camp counselor {v} caught sneaking out' },
+      { role: 'ranger', hook: 'the park ranger who knows every trail' },
+      { role: 'cook', hook: 'the camp cook whose stew made everyone sick' },
+      { role: 'hiker', hook: 'the hiker who arrived the same night' },
+      { role: 'guide', hook: 'the fishing guide {v} owed money' },
+      { role: 'caretaker', hook: 'the caretaker who lives alone by the lake' },
+    ],
+    phrases: [
+      'THE EMBERS WERE STILL WARM',
+      'TRACKS LEAD TO THE LAKE',
+      'NOBODY SLEPT THAT NIGHT',
+    ],
     words: [
       'CANOE', 'CAMPFIRE', 'CANTEEN', 'LANTERN', 'MOSQUITO', 'TENT',
       'TRAIL', 'WILDERNESS', 'COMPASS', 'FIREWOOD', 'SLEEPINGBAG',
@@ -309,6 +604,19 @@ export const THEMES: Theme[] = [
     keywords: ['Harbor', 'Docks', 'Wharf', 'Low Tide', 'Fisherman'],
     rooms: ['Docks', 'Pier', 'Fish Market', 'Warehouse', 'Crane Cab'],
     weapons: ['Cargo Hook', 'Crowbar', 'Anchor Chain', 'Fillet Knife', 'Mooring Rope'],
+    suspects: [
+      { role: 'harbormaster', hook: 'the harbormaster taking bribes to look away' },
+      { role: 'fisherman', hook: 'the fisherman {v} bought out' },
+      { role: 'smuggler', hook: 'the smuggler whose cargo never clears customs' },
+      { role: 'stevedore', hook: 'the stevedore {v} had fired' },
+      { role: 'captain', hook: 'the trawler captain drowning in debt' },
+      { role: 'inspector', hook: 'the customs inspector who signs anything for a price' },
+    ],
+    phrases: [
+      'CHECK THE CARGO LOG',
+      'THE FOG ROLLED IN',
+      'THE TIDE WAS GOING OUT',
+    ],
     words: [
       'ANCHOR', 'BUOY', 'CARGO', 'DOCK', 'FERRY', 'HULL', 'MOORING',
       'ROPE', 'TIDE', 'WHARF', 'CRANE', 'FOGHORN', 'TRAWLER', 'NETS',
@@ -321,6 +629,19 @@ export const THEMES: Theme[] = [
     keywords: ['Opera', 'Aria', 'Mezzanine', 'Diva', 'High C'],
     rooms: ['Royal Box', 'Wardrobe', 'Rehearsal Hall', 'Backstage', 'Grand Foyer'],
     weapons: ['Chandelier', 'Hatpin', 'Baton', 'Poisoned Lozenge', 'Costume Sword'],
+    suspects: [
+      { role: 'soprano', hook: 'the soprano {v} replaced for opening night' },
+      { role: 'tenor', hook: 'the tenor whose voice is failing' },
+      { role: 'conductor', hook: 'the conductor {v} called a fraud' },
+      { role: 'patron', hook: 'the patron with a private box' },
+      { role: 'understudy', hook: 'the understudy who knows every aria' },
+      { role: 'critic', hook: 'the critic {v} had bribed' },
+    ],
+    phrases: [
+      'THE ARIA WAS CUT SHORT',
+      'THE HIGH NOTE COVERED THE SCREAM',
+      'CHECK THE PROGRAM',
+    ],
     words: [
       'ARIA', 'BARITONE', 'CHORUS', 'COSTUME', 'LIBRETTO', 'MEZZANINE',
       'OVERTURE', 'PROGRAM', 'SOPRANO', 'DIVA', 'FALSETTO', 'SCORE',
@@ -334,6 +655,19 @@ export const THEMES: Theme[] = [
     keywords: ['Rodeo', 'Eight Seconds', 'Bucked', 'Saddled'],
     rooms: ['Stables', 'Bull Pen', 'Chutes', 'Grandstand', 'Tack Room'],
     weapons: ['Lasso', 'Branding Iron', 'Horseshoe', 'Bullwhip', 'Six Shooter'],
+    suspects: [
+      { role: 'rider', hook: 'the bronc rider {v} beat for the title' },
+      { role: 'clown', hook: 'the rodeo clown who saw it all' },
+      { role: 'rancher', hook: 'the rancher {v} cheated on a cattle deal' },
+      { role: 'announcer', hook: 'the announcer with a microphone and a grudge' },
+      { role: 'judge', hook: 'the judge who took money to fix the scores' },
+      { role: 'farrier', hook: 'the farrier who shoes every horse in the show' },
+    ],
+    phrases: [
+      'THE GATE OPENED EARLY',
+      'THE HORSE WAS DRUGGED',
+      'CHECK THE SCORES',
+    ],
     words: [
       'BRONCO', 'BUCKLE', 'CORRAL', 'LASSO', 'RIDER', 'SPURS',
       'STAMPEDE', 'STEER', 'BARREL', 'CLOWN', 'CHUTE', 'LARIAT',
@@ -345,8 +679,21 @@ export const THEMES: Theme[] = [
     place: 'underground speakeasy',
     titles: ['The Speakeasy Murder', 'Whisper the Password', 'Bathtub Gin', 'Last Call', 'The Bootlegger\'s Ledger'],
     keywords: ['Speakeasy', 'Bathtub Gin', 'Password', 'Bootlegger', 'Last Call'],
-    rooms: ['Back Room', 'Cellar', 'Secret Tunnel', 'Coat Room', 'Bar'],
+    rooms: ['Back Room', 'Cellar', 'Secret Tunnel', 'Coat Room', 'Front Bar'],
     weapons: ['Tommy Gun', 'Brass Knuckles', 'Poisoned Gin', 'Ice Pick', 'Broken Bottle'],
+    suspects: [
+      { role: 'bootlegger', hook: 'the bootlegger {v} double-crossed' },
+      { role: 'singer', hook: 'the singer who knows the password' },
+      { role: 'doorman', hook: 'the doorman who lets the wrong people in' },
+      { role: 'patrolman', hook: 'the crooked patrolman on the payroll' },
+      { role: 'bookkeeper', hook: 'the bookkeeper who keeps two sets of ledgers' },
+      { role: 'flapper', hook: 'the flapper {v} jilted' },
+    ],
+    phrases: [
+      'THE PASSWORD CHANGED',
+      'THE RAID WAS A TIPOFF',
+      'THE LEDGER IS MISSING',
+    ],
     words: [
       'BOOTLEG', 'FLAPPER', 'GIN', 'HIDDEN', 'JAZZ', 'PASSWORD',
       'TAPROOM', 'VELVET', 'WHISKEY', 'RAID', 'STILL', 'MOONSHINE',
@@ -360,6 +707,19 @@ export const THEMES: Theme[] = [
     keywords: ['Garden', 'Roses', 'Nightshade', 'Poison Ivy', 'Daisies'],
     rooms: ['Greenhouse', 'Rose Garden', 'Potting Shed', 'Hedge Maze', 'Lily Pond'],
     weapons: ['Garden Shears', 'Trowel', 'Weedkiller', 'Nightshade', 'Rake'],
+    suspects: [
+      { role: 'gardener', hook: 'the head gardener {v} was about to dismiss' },
+      { role: 'botanist', hook: 'the botanist whose rare orchid died' },
+      { role: 'volunteer', hook: 'the volunteer who knows which plants are poison' },
+      { role: 'benefactor', hook: 'the benefactor fighting over the will' },
+      { role: 'beekeeper', hook: 'the beekeeper {v} blamed for the stings' },
+      { role: 'florist', hook: 'the florist who delivered the wreaths early' },
+    ],
+    phrases: [
+      'THE PLANTS WERE MOVED',
+      'FRESH SOIL ON THE PATH',
+      'THE GATE WAS UNLOCKED',
+    ],
     words: [
       'BLOOM', 'FERN', 'GARDEN', 'GREENHOUSE', 'LILY', 'ORCHID',
       'PETAL', 'POLLEN', 'TULIP', 'VINE', 'PRUNER', 'TERRARIUM',
@@ -371,8 +731,21 @@ export const THEMES: Theme[] = [
     place: 'smoky boxing gym',
     titles: ['The Boxing Gym Murder', 'A Knockout', 'Down for the Count', 'The Final Round', 'Below the Belt'],
     keywords: ['Boxing', 'Knockout', 'Down for the Count', 'Round', 'Below the Belt'],
-    rooms: ['Ring', 'Locker Room', 'Showers', 'Weight Room', 'Back Alley'],
+    rooms: ['Boxing Ring', 'Locker Room', 'Showers', 'Weight Room', 'Back Alley'],
     weapons: ['Dumbbell', 'Jump Rope', 'Loaded Glove', 'Corner Stool', 'Brass Bell'],
+    suspects: [
+      { role: 'trainer', hook: 'the trainer {v} fired before the big fight' },
+      { role: 'promoter', hook: 'the promoter who bet against their own fighter' },
+      { role: 'contender', hook: 'the contender {v} beat in a fixed fight' },
+      { role: 'cutman', hook: 'the cutman with steady hands and a temper' },
+      { role: 'manager', hook: 'the manager skimming the purse' },
+      { role: 'referee', hook: 'the referee who stopped the fight too early' },
+    ],
+    phrases: [
+      'THE FIGHT WAS FIXED',
+      'CHECK THE BETTING SLIPS',
+      'THE BELL RANG EARLY',
+    ],
     words: [
       'BELL', 'BOUT', 'CANVAS', 'CORNER', 'GLOVES', 'JAB', 'PUNCH',
       'RING', 'SPAR', 'UPPERCUT', 'SPEEDBAG', 'REFEREE', 'FEINT',
@@ -386,6 +759,19 @@ export const THEMES: Theme[] = [
     keywords: ['Chess', 'Checkmate', 'Gambit', 'Endgame', 'Pawn'],
     rooms: ['Tournament Hall', 'Smoking Room', 'Trophy Room', 'Analysis Room', 'Cloakroom'],
     weapons: ['Chess Clock', 'Marble Rook', 'Trophy', 'Poisoned Tea', 'Chessboard'],
+    suspects: [
+      { role: 'grandmaster', hook: 'the grandmaster {v} beat in public' },
+      { role: 'prodigy', hook: 'the teenage prodigy accused of cheating' },
+      { role: 'arbiter', hook: 'the arbiter who controls the clocks' },
+      { role: 'secretary', hook: 'the club secretary short on the dues' },
+      { role: 'patron', hook: 'the patron funding the tournament' },
+      { role: 'hustler', hook: 'the park hustler {v} banned from the club' },
+    ],
+    phrases: [
+      'THE CLOCK WAS TAMPERED WITH',
+      'CHECK THE SCORESHEET',
+      'THE GAME WAS THROWN',
+    ],
     words: [
       'BISHOP', 'BOARD', 'CASTLE', 'CHECK', 'GAMBIT', 'KING', 'KNIGHT',
       'MATE', 'PAWN', 'QUEEN', 'ROOK', 'ENDGAME', 'BLITZ', 'SACRIFICE',
@@ -398,6 +784,19 @@ export const THEMES: Theme[] = [
     keywords: ['Diner', 'Order Up', 'Coffee', 'Blue Plate', 'Late Shift'],
     rooms: ['Kitchen', 'Corner Booth', 'Freezer', 'Parking Lot', 'Stockroom'],
     weapons: ['Frying Pan', 'Meat Cleaver', 'Coffee Pot', 'Poisoned Pie', 'Spatula'],
+    suspects: [
+      { role: 'server', hook: 'the night-shift server {v} never tipped' },
+      { role: 'cook', hook: 'the short-order cook with a criminal past' },
+      { role: 'trucker', hook: 'the trucker who stops in every night' },
+      { role: 'owner', hook: 'the owner selling the diner out from under everyone' },
+      { role: 'dishwasher', hook: 'the dishwasher who hears everything' },
+      { role: 'regular', hook: 'the regular who sits in the same booth every night' },
+    ],
+    phrases: [
+      'THE COFFEE WAS COLD',
+      'CHECK THE ORDER SLIPS',
+      'THE JUKEBOX STOPPED',
+    ],
     words: [
       'BOOTH', 'COFFEE', 'COUNTER', 'GRIDDLE', 'JUKEBOX', 'MILKSHAKE',
       'PANCAKE', 'PIE', 'PLATTER', 'WAITRESS', 'KETCHUP', 'NAPKIN',
@@ -411,6 +810,19 @@ export const THEMES: Theme[] = [
     keywords: ['Drive-In', 'Double Feature', 'Late Show', 'Fade to Black'],
     rooms: ['Projection Booth', 'Snack Bar', 'Back Row', 'Box Office', 'Parking Lot'],
     weapons: ['Film Reel', 'Tire Iron', 'Speaker Cord', 'Poisoned Soda', 'Car Jack'],
+    suspects: [
+      { role: 'projectionist', hook: 'the projectionist who watched it all from the booth' },
+      { role: 'attendant', hook: 'the lot attendant {v} caught stealing' },
+      { role: 'owner', hook: 'the owner with the drive-in up for sale' },
+      { role: 'mechanic', hook: "the mechanic who fixed {v}'s car that night" },
+      { role: 'companion', hook: "{v}'s companion for the double feature" },
+      { role: 'vendor', hook: 'the snack vendor {v} tried to fire' },
+    ],
+    phrases: [
+      'THE FILM SNAPPED',
+      'HEADLIGHTS IN THE DARK',
+      'CHECK THE PARKING STUBS',
+    ],
     words: [
       'CONCESSION', 'FENDER', 'FEATURE', 'HORNS', 'MOVIE', 'PROJECTOR',
       'SCREEN', 'SODA', 'TRAILER', 'MARQUEE', 'REEL', 'DUSK', 'SPEAKER',
@@ -423,6 +835,19 @@ export const THEMES: Theme[] = [
     keywords: ['Fairground', 'Funhouse', 'Attraction', 'Mirrors', 'Blue Ribbon'],
     rooms: ['Mirror Maze', 'Livestock Barn', 'Strongman Tent', 'Funhouse', 'Prize Booth'],
     weapons: ['Sledgehammer', 'Broken Mirror', 'Pitchfork', 'Carving Knife'],
+    suspects: [
+      { role: 'judge', hook: 'the pie-contest judge {v} accused of bias' },
+      { role: 'strongman', hook: 'the strongman who lost the title to {v}' },
+      { role: 'farmer', hook: 'the farmer whose prize hog was disqualified' },
+      { role: 'barker', hook: 'the barker running a rigged game' },
+      { role: 'cashier', hook: 'the ticket cashier short on the takings' },
+      { role: 'mayor', hook: 'the mayor opening the fair that night' },
+    ],
+    phrases: [
+      'THE PRIZE WAS RIGGED',
+      'THE MIRRORS LIE',
+      'CHECK THE JUDGING CARDS',
+    ],
     words: [
       'BARKER', 'BOOTH', 'FERRIS', 'FUNHOUSE', 'MIRROR', 'PRIZE',
       'RIDES', 'TICKETS', 'STRONGMAN', 'MIRRORMAZE',
@@ -436,6 +861,19 @@ export const THEMES: Theme[] = [
     keywords: ['Monastery', 'Silent Vow', 'Sanctuary', 'Vespers', 'Brother'],
     rooms: ['Chapel', 'Bell Tower', 'Scriptorium', 'Cloister', 'Crypt'],
     weapons: ['Candlestick', 'Censer', 'Bell Rope', 'Rosary', 'Poisoned Wine'],
+    suspects: [
+      { role: 'abbot', hook: "the abbot guarding the monastery's secrets" },
+      { role: 'novice', hook: 'the novice {v} caught breaking a vow' },
+      { role: 'brewer', hook: 'the brewer who makes the abbey beer' },
+      { role: 'scribe', hook: 'the scribe copying forbidden texts' },
+      { role: 'pilgrim', hook: 'the pilgrim who arrived during the storm' },
+      { role: 'cellarer', hook: 'the cellarer who keeps the accounts' },
+    ],
+    phrases: [
+      'THE BELLS RANG AT MIDNIGHT',
+      'A VOW WAS BROKEN',
+      'CHECK THE REGISTER',
+    ],
     words: [
       'ABBEY', 'BELL', 'CANDLE', 'CELL', 'CHAPEL', 'CHOIR', 'CLOISTER',
       'MONK', 'PRAYER', 'VESPERS', 'SCRIPTORIUM',
@@ -449,6 +887,19 @@ export const THEMES: Theme[] = [
     keywords: ['Observatory', 'Falling Star', 'the Stars', 'Skies', 'Horizon'],
     rooms: ['Dome', 'Control Room', 'Catwalk', 'Darkroom', 'Map Room'],
     weapons: ['Meteorite', 'Sextant', 'Tripod', 'Brass Telescope', 'Celestial Globe'],
+    suspects: [
+      { role: 'assistant', hook: "{v}'s jilted research assistant" },
+      { role: 'rival', hook: 'the rival astronomer who claims the comet' },
+      { role: 'technician', hook: 'the night technician who runs the telescope' },
+      { role: 'director', hook: "the director cutting {v}'s funding" },
+      { role: 'student', hook: 'the doctoral student whose thesis {v} rejected' },
+      { role: 'donor', hook: 'the donor who named a star after {v}' },
+    ],
+    phrases: [
+      'THE STARS WERE WRONG',
+      'CHECK THE LOGBOOK',
+      'THE SHUTTER WAS OPEN',
+    ],
     words: [
       'COMET', 'DOME', 'LENS', 'LUNAR', 'ORBIT', 'PLANET', 'SATELLITE',
       'STAR', 'TELESCOPE', 'ZODIAC', 'ECLIPSE', 'NEBULA', 'COSMOS',
@@ -461,6 +912,19 @@ export const THEMES: Theme[] = [
     keywords: ['Tailor', 'Fit', 'Hemmed', 'Threads'],
     rooms: ['Fitting Room', 'Cutting Room', 'Stockroom', 'Shopfront', 'Back Office'],
     weapons: ['Tailor Shears', 'Tape Measure', 'Pressing Iron', 'Poisoned Needle'],
+    suspects: [
+      { role: 'apprentice', hook: 'the apprentice {v} never promoted' },
+      { role: 'client', hook: 'the client whose suit was ruined' },
+      { role: 'merchant', hook: 'the cloth merchant owed a fortune' },
+      { role: 'partner', hook: 'the partner whose name came off the door' },
+      { role: 'cutter', hook: 'the cutter with a spotless record and a secret' },
+      { role: 'rival', hook: 'the rival tailor across the street' },
+    ],
+    phrases: [
+      'THE SEAM WAS UNPICKED',
+      'CHECK THE MEASUREMENTS',
+      'A BUTTON WAS MISSING',
+    ],
     words: [
       'BOBBIN', 'BUTTON', 'FABRIC', 'NEEDLE', 'PATTERN', 'PIN', 'SEAM',
       'SILK', 'STITCH', 'THIMBLE', 'THREAD', 'TWEED', 'LAPEL', 'HEM',

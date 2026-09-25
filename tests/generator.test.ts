@@ -125,8 +125,10 @@ describe('per-case validity', () => {
 
     // mechanic-specific invariants
     if (p.kind === 'leftovers') {
-      expect(p.message).toContain(squash(c.killer))
-      expect(p.blanks.length).toBeGreaterThan(0)
+      expect(p.message.startsWith(p.core)).toBe(true)
+      expect(p.blanks[0]).toBe('killer')
+      if (p.blanks.includes('weapon')) expect(p.core).toContain(squash(c.weapon))
+      if (p.blanks.includes('location')) expect(p.core).toContain(squash(c.location))
     } else if (p.kind === 'lineup') {
       expect(p.suspects).toHaveLength(4)
       const matches = p.suspects.filter((s) => s.traits[p.clueDim] === p.clueValue)
@@ -270,6 +272,107 @@ describe('story coherence', () => {
   it.each(cases)('case #$id "$title" does not reference another theme', (c) => {
     expect(foreignRefs(c.title, c.themeId)).toEqual([])
   })
+})
+
+describe('suspects and clues', () => {
+  const themeById = new Map(THEMES.map((t) => [t.id, t]))
+  const surname = (name: string) => squash(name.split(' ').slice(1).join(''))
+  /** text the player reads as the case's clue, squashed */
+  const clueTextOf = (c: CaseFile): string | null => {
+    const p = c.payload
+    if (p.kind === 'leftovers' || p.kind === 'lineup' || p.kind === 'elimination') return p.message
+    if (p.kind === 'anagram' || p.kind === 'cryptogram') return squash(p.phrase)
+    return null
+  }
+  /** does the text single out the killer (by name or role) and nobody else? */
+  const pointsOnlyAtKiller = (text: string, c: CaseFile) => {
+    const killer = c.suspects.find((s) => s.name === c.killer)!
+    const namesKiller = text.includes(squash(killer.name)) || text.includes(squash(killer.role))
+    const others = c.suspects.filter((s) => s !== killer)
+    const namesOther = others.some(
+      (s) => text.includes(squash(s.role)) || text.includes(surname(s.name)),
+    )
+    return namesKiller && !namesOther
+  }
+
+  it('every theme has 6 suspect archetypes and clean padding phrases', () => {
+    for (const t of THEMES) {
+      expect(t.suspects, t.id).toHaveLength(6)
+      const roles = t.suspects.map((s) => squash(s.role))
+      expect(new Set(roles).size, t.id).toBe(6)
+      for (const s of t.suspects) {
+        expect(s.role, t.id).toMatch(/^[a-z]+( [a-z]+)*$/)
+        expect(s.hook.toLowerCase(), t.id).toContain(s.role)
+        // no role hides inside another (clues must be unambiguous)
+        for (const r of roles) if (r !== squash(s.role)) expect(r.includes(squash(s.role)), `${t.id}:${s.role}`).toBe(false)
+      }
+      expect(t.phrases.length, t.id).toBeGreaterThanOrEqual(3)
+      const answers = [...t.rooms, ...t.weapons, ...t.suspects.map((s) => s.role)].map(squash)
+      for (const ph of t.phrases) {
+        expect(ph, t.id).toMatch(/^[A-Z]+( [A-Z]+)*$/)
+        for (const a of answers) expect(squash(ph).includes(a), `${t.id}: "${ph}" names ${a}`).toBe(false)
+      }
+    }
+  })
+
+  it.each(cases)('case #$id introduces 4 suspects including the killer', (c) => {
+    const t = themeById.get(c.themeId)!
+    expect(c.suspects).toHaveLength(4)
+    const names = c.suspects.map((s) => s.name)
+    expect(new Set(names).size).toBe(4)
+    expect(new Set(names.map(surname)).size).toBe(4)
+    expect(names).toContain(c.killer)
+    expect(names).not.toContain(c.victim)
+    expect(new Set(c.suspects.map((s) => s.role)).size).toBe(4)
+    for (const s of c.suspects) {
+      expect(t.suspects.map((x) => x.role)).toContain(s.role)
+      expect(s.hook).not.toContain('{')
+      expect(s.hook.toLowerCase()).toContain(s.role)
+    }
+    // every mechanic that shows people uses exactly this cast
+    const p = c.payload
+    const cast = new Set(names)
+    if (p.kind === 'lineup') expect(new Set(p.suspects.map((s) => s.name))).toEqual(cast)
+    if (p.kind === 'elimination') expect(new Set(p.suspects.map((s) => s.name))).toEqual(cast)
+    if (p.kind === 'deduction') expect(new Set(p.suspects)).toEqual(cast)
+    if (p.kind === 'interrogation') expect(new Set(p.suspects.map((s) => s.speaker))).toEqual(cast)
+  })
+
+  it.each(cases)('case #$id has no filler padding', (c) => {
+    const text = clueTextOf(c)
+    if (text === null) return
+    expect(text).not.toContain('XX')
+    expect(text).not.toContain('QEDQED')
+    expect(text).not.toMatch(/QED$/)
+  })
+
+  it.each(cases.filter((c) => ['leftovers', 'anagram', 'cryptogram'].includes(c.mechanic)))(
+    'case #$id clue identifies the killer and no one else',
+    (c) => {
+      expect(pointsOnlyAtKiller(clueTextOf(c)!, c)).toBe(true)
+    },
+  )
+
+  it('dead-letter cases point at a suspect by role rather than "IT WAS <NAME>"', () => {
+    const dead = cases.filter((c) => c.payload.kind === 'leftovers')
+    const byRole = dead.filter((c) => {
+      const p = c.payload as Extract<CaseFile['payload'], { kind: 'leftovers' }>
+      const role = c.suspects.find((s) => s.name === c.killer)!.role
+      return p.core.includes(squash(role)) && !p.core.includes(squash(c.killer))
+    })
+    expect(byRole.length).toBe(dead.length)
+  })
+
+  it.each(cases.filter((c) => c.mechanic === 'lineup' || c.mechanic === 'elimination'))(
+    'case #$id padding never names anyone in the cast',
+    (c) => {
+      const text = clueTextOf(c)!
+      for (const s of c.suspects) {
+        expect(text).not.toContain(squash(s.role))
+        expect(text).not.toContain(surname(s.name))
+      }
+    },
+  )
 })
 
 describe('determinism', () => {

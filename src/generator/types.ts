@@ -23,6 +23,8 @@ export interface LeftoverPayload {
   kind: 'leftovers'
   /** full leftover text in row-major order (core message + padding tail), uppercase, no spaces */
   message: string
+  /** the clue part of `message` (names the killer's role, or their name as a fallback) */
+  core: string
   /** which case-file blanks the player must fill */
   blanks: Array<'killer' | 'weapon' | 'location'>
   /** cell indices (r*cols+c) of all leftover cells, row-major */
@@ -156,6 +158,15 @@ export type Payload =
   | InterrogationPayload
   | TimelinePayload
 
+/** A member of the case's cast, introduced before the puzzle starts. */
+export interface CaseSuspect {
+  name: string
+  /** lowercase role clues refer to, e.g. "sommelier" */
+  role: string
+  /** one-line hook shown on the case screen */
+  hook: string
+}
+
 export interface CaseFile {
   id: number
   volume: 1 | 2 | 3
@@ -169,6 +180,8 @@ export interface CaseFile {
   grid: string[]
   words: string[]
   victim: string
+  /** 4 suspects in display order; the killer is always one of them */
+  suspects: CaseSuspect[]
   killer: string
   weapon: string
   location: string
